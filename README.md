@@ -5,7 +5,7 @@ Last info update: 20 Jan 2024
 
 ### Group Members
 - Boucher, Jack
-- 
+- Sabrina Quadir
 - 
 
 ### Event Log
