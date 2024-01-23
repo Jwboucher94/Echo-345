@@ -11,3 +11,5 @@ Last info update: 20 Jan 2024
 ### Event Log
 20 JAN - JB - INITIAL COMMIT
 22 JAN - SQ - INITIAL COMMIT
+
+And why is it echo, not Echo?
