@@ -6,7 +6,7 @@ Last info update: 20 Jan 2024
 ### Group Members
 - Boucher, Jack
 - Sabrina Quadir
-- 
+- Lucas Kay
 
 ### Event Log
 20 JAN - JB - INITIAL COMMIT
