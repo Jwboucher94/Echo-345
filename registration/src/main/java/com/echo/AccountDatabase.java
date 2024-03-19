@@ -13,10 +13,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class AccountDatabase {
-    Map<Integer, Account> accounts = new HashMap<>(); // Initialize to empty map
+    Map<Integer, Account> accounts = new HashMap<>();                   // Initialize to empty map
 
 
-    public AccountDatabase(InputStream inputStream) {
+    public AccountDatabase(InputStream inputStream) {                   // Constructor
         if (inputStream == null) {
             throw new IllegalArgumentException("Input stream cannot be null");
         }
@@ -27,7 +27,8 @@ public class AccountDatabase {
         }
     }
 
-    public boolean checkCredentials(int userID, String loginName, String password, Role role) {
+    public boolean checkCredentials(int userID, String loginName, 
+                                    String password, Role role) {       // Method to check credentials
         Account account = accounts.get(userID);
         if (account == null || !account.loginName.equals(loginName) || 
             !account.password.equals(password) || !account.role.equals(role) || 
@@ -37,7 +38,7 @@ public class AccountDatabase {
         return true; 
     }
 
-    public void block(int userID) throws AccountNotFoundException {
+    public void block(int userID) throws AccountNotFoundException {     // Method to block account
         Account account = accounts.get(userID);
         if (account == null) {
             throw new AccountNotFoundException("Account not found for ID: " + userID);
@@ -46,7 +47,7 @@ public class AccountDatabase {
         saveAccounts(); // Update the CSV
     }
     
-    public void unblock(int userID) throws AccountNotFoundException {
+    public void unblock(int userID) throws AccountNotFoundException {   // Method to unblock account
         Account account = accounts.get(userID);
         if (account == null) {
             throw new AccountNotFoundException("Account not found for ID: " + userID);
@@ -55,7 +56,7 @@ public class AccountDatabase {
         saveAccounts(); // Update the CSV
     }
 
-    public Map<Integer, Account> loadAccounts(InputStream inputStream) throws IOException { 
+    public Map<Integer, Account> loadAccounts(InputStream inputStream) throws IOException { // Method to load accounts
         accounts.clear();
 
     
@@ -74,12 +75,12 @@ public class AccountDatabase {
                     accounts.put(account.userID, account);
                 } 
             }
-        } catch (IOException e) {
+        } catch (IOException e) {   // Catch IOException                              
             System.err.println("Error loading accounts: " + e.getMessage());
         } 
         return accounts;
     }
-    private String getResourcePath(String filename) {
+    private String getResourcePath(String filename) {   // Method to get the absolute path         
         URL url = getClass().getClassLoader().getResource(filename);
         if (url == null) {
             throw new RuntimeException("Resource not found: " + filename);
@@ -88,8 +89,8 @@ public class AccountDatabase {
     }
     
     
-    public void saveAccounts() {
-        String filePath = getResourcePath("MOCK_DATA.csv"); // Get the absolute path
+    public void saveAccounts() {    // Method to save accounts
+        String filePath = getResourcePath("MOCK_DATA.csv");     // Get the absolute path
         System.out.println("Absolute Path: " + new File(filePath).getAbsolutePath());
         try (FileWriter fw = new FileWriter(filePath);
              BufferedWriter bw = new BufferedWriter(fw)) {
@@ -103,7 +104,7 @@ public class AccountDatabase {
         } 
     }
 
-    public void reloadAccounts() throws IOException {
+    public void reloadAccounts() throws IOException {   // Method to reload accounts
         InputStream inputStream = getClass().getClassLoader().getResourceAsStream("MOCK_DATA.csv"); 
         if (inputStream == null) {
             throw new FileNotFoundException("MOCK_DATA.csv not found in test resources");
@@ -114,10 +115,16 @@ public class AccountDatabase {
     
 }
 
-class Account {
+class Account {    // Account class
     int userID;
     String loginName;
     String password;
     Role role;
     String status; 
+}
+
+enum Role {  // public Role enum
+    STUDENT,
+    ADMIN,
+    ADVISOR;
 }
