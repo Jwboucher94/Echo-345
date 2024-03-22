@@ -2,7 +2,7 @@ package com.echo;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test; // For newer JUnit
+import org.junit.jupiter.api.Test; 
 import org.opentest4j.AssertionFailedError;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -20,7 +20,7 @@ public class AccountDatabaseTest {
 
     private AccountDatabase accountDB;
 
-    @BeforeEach // JUnit 5 version of @Before
+    @BeforeEach 
     public void setup() throws IOException {
         InputStream inputStream = getClass().getClassLoader().getResourceAsStream("MOCK_DATA.csv");
         if (inputStream == null) {
@@ -28,19 +28,19 @@ public class AccountDatabaseTest {
         }
         accountDB = new AccountDatabase(inputStream);
     }
-  // Test of valid credentials
+
     @Test
     public void testCheckCredentials_ValidCredentials() {
         assertTrue(accountDB.checkCredentials(359413893, "lbullimore6", "cV1{8NjIwh", Role.STUDENT));
     }
 
-    // Test of invalid credentials
+    
     @Test
     public void testCheckCredentials_InvalidCredentials() {
         assertFalse(accountDB.checkCredentials(123456789, "invalidUser", "badPassword", Role.STUDENT));
     }
 
-    // Test of blocked account
+    
     @Test
     public void testCheckCredentials_BlockedAccount() {
         assertFalse(accountDB.checkCredentials(596501201, "ebaff9", "iC7ja@~m>T*T", Role.STUDENT));

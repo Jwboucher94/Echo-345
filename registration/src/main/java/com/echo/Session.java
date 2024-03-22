@@ -4,13 +4,13 @@ import java.util.TimerTask;
 
    
 public class Session {
-    private String sessionId; // Added to uniquely identify the session
+    private String sessionId; 
     private Role role; 
     private Account account;
     private SessionManager sessionManager;
     private Timer logoutTimer;
     private long expirationTime; 
-    private boolean isActive; // Added to track if session is active
+    private boolean isActive; 
 
     public Session(String sessionId, Role role, Account account, SessionManager sessionManager, long expirationDuration) {
         this.sessionId = sessionId;
@@ -34,21 +34,47 @@ public class Session {
     public void logout() {
         if (isActive) {
             isActive = false;
-            sessionManager.removeSession(this.sessionId); // Pass the sessionId string here
-            logoutTimer.cancel(); // Stop the logout timer.
+            sessionManager.removeSession(this.sessionId); 
+            logoutTimer.cancel(); 
         }
+    }
+    
+    public String getSessionId() {
+        return sessionId;
+    }
+
+    public Role getRole() {
+        return role;
+    }
+
+    public Account getAccount() {
+        return account;
+    }
+
+    public SessionManager getSessionManager() {
+        return sessionManager;
+    }
+
+    public Timer getLogoutTimer() {
+        return logoutTimer;
+    }
+
+    public long getExpirationTime() {
+        return expirationTime;
+    }
+
+    public boolean isActive() {
+        return isActive;
+    }
+
+    // Setter methods (if needed)
+    // It might not be appropriate to set some of these fields after initialization
+    public void setActive(boolean active) {
+        isActive = active;
     }
     
 
 
-
-
-class StudentAccount {
-    // Attributes will be added in the future
-    public StudentAccount() {
-        // Nothing to initialize for now
-    }
-}
 
 
 }

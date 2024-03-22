@@ -13,22 +13,22 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class AccountDatabase {
-    Map<Integer, Account> accounts = new HashMap<>();                   // Initialize to empty map
+    Map<Integer, Account> accounts = new HashMap<>();                 
 
 
-    public AccountDatabase(InputStream inputStream) {                   // Constructor
+    public AccountDatabase(InputStream inputStream) {                 
         if (inputStream == null) {
             throw new IllegalArgumentException("Input stream cannot be null");
         }
         try {
-            accounts = loadAccounts(inputStream); // Pass the inputStream directly
+            accounts = loadAccounts(inputStream);
         } catch (IOException e) {
-            // ... handle exception (consider rethrowing or logging)
+           
         }
     }
 
     public boolean checkCredentials(int userID, String loginName, 
-                                    String password, Role role) {       // Method to check credentials
+                                    String password, Role role) {       
         Account account = accounts.get(userID);
         if (account == null || !account.loginName.equals(loginName) || 
             !account.password.equals(password) || !account.role.equals(role) || 
@@ -38,29 +38,29 @@ public class AccountDatabase {
         return true; 
     }
 
-    public void block(int userID) throws AccountNotFoundException {     // Method to block account
+    public void block(int userID) throws AccountNotFoundException {    
         Account account = accounts.get(userID);
         if (account == null) {
             throw new AccountNotFoundException("Account not found for ID: " + userID);
         }
         account.status = "blocked";
-        saveAccounts(); // Update the CSV
+        saveAccounts(); 
     }
     
-    public void unblock(int userID) throws AccountNotFoundException {   // Method to unblock account
+    public void unblock(int userID) throws AccountNotFoundException {  
         Account account = accounts.get(userID);
         if (account == null) {
             throw new AccountNotFoundException("Account not found for ID: " + userID);
         }
         account.status = "active";
-        saveAccounts(); // Update the CSV
+        saveAccounts(); 
     }
 
-    public Map<Integer, Account> loadAccounts(InputStream inputStream) throws IOException { // Method to load accounts
+    public Map<Integer, Account> loadAccounts(InputStream inputStream) throws IOException { 
         accounts.clear();
 
     
-        try (BufferedReader br = new BufferedReader(new InputStreamReader(inputStream))) {  // Use the provided inputStream
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(inputStream))) {  
     
             String line;
             while ((line = br.readLine()) != null) {
@@ -75,12 +75,12 @@ public class AccountDatabase {
                     accounts.put(account.userID, account);
                 } 
             }
-        } catch (IOException e) {   // Catch IOException                              
+        } catch (IOException e) {                     
             System.err.println("Error loading accounts: " + e.getMessage());
         } 
         return accounts;
     }
-    private String getResourcePath(String filename) {   // Method to get the absolute path         
+    private String getResourcePath(String filename) {          
         URL url = getClass().getClassLoader().getResource(filename);
         if (url == null) {
             throw new RuntimeException("Resource not found: " + filename);
@@ -89,8 +89,8 @@ public class AccountDatabase {
     }
     
     
-    public void saveAccounts() {    // Method to save accounts
-        String filePath = getResourcePath("MOCK_DATA.csv");     // Get the absolute path
+    public void saveAccounts() {    
+        String filePath = getResourcePath("MOCK_DATA.csv");     
         System.out.println("Absolute Path: " + new File(filePath).getAbsolutePath());
         try (FileWriter fw = new FileWriter(filePath);
              BufferedWriter bw = new BufferedWriter(fw)) {
@@ -104,7 +104,7 @@ public class AccountDatabase {
         } 
     }
 
-    public void reloadAccounts() throws IOException {   // Method to reload accounts
+    public void reloadAccounts() throws IOException {  
         InputStream inputStream = getClass().getClassLoader().getResourceAsStream("MOCK_DATA.csv"); 
         if (inputStream == null) {
             throw new FileNotFoundException("MOCK_DATA.csv not found in test resources");
@@ -115,15 +115,24 @@ public class AccountDatabase {
     
 }
 
-class Account {    // Account class
+class Account {    
     int userID;
     String loginName;
     String password;
     Role role;
     String status; 
+
+    public String getStatus() {
+        return this.status;
+    }
+
+    
+    public void setStatus(String status) {
+        this.status = status;
+    }
 }
 
-enum Role {  // public Role enum
+enum Role {  
     STUDENT,
     ADMIN,
     ADVISOR;

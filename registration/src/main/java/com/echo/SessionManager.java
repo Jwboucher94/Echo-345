@@ -1,24 +1,24 @@
 package com.echo;
-import com.echo.Session;
-import com.echo.SessionManager.InvalidCredentialsException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 public class SessionManager {
     private Map<String, Session> activeSessions = new HashMap<>();
     private AccountDatabase accountDatabase;
+
 
     public SessionManager(AccountDatabase accountDatabase) {
         this.accountDatabase = accountDatabase;
     }
 
     public Session login(String loginName, String password, Role role) throws InvalidCredentialsException {
-        // Iterate over all accounts to find one with matching credentials
+       
         for (Account account : accountDatabase.accounts.values()) {
             if (account.loginName.equals(loginName) && account.password.equals(password)) {
-                // Check if the role and account status are valid
+            
                 if (account.role == role && !"blocked".equals(account.status)) {
-                    // Credentials are valid and account is active, create a new Session
+           
                     String sessionId = generateSessionId();
                     Session newSession = new Session(sessionId, role, account, this, 30 * 60 * 1000); // 30 minutes
                     activeSessions.put(sessionId, newSession);
@@ -36,16 +36,25 @@ public class SessionManager {
     }
 
     private String generateSessionId() {
-        // Implement session ID generation logic
-        return ""; // Placeholder
+        
+        return UUID.randomUUID().toString();
     }
 
-    // Exception class for invalid credentials
+    
     public static class InvalidCredentialsException extends Exception {
         public InvalidCredentialsException(String message) {
             super(message);
         }
     }
 
-    // ... Other session management functionality ...
+    public Map<String, Session> getActiveSessions() {
+        return new HashMap<>(activeSessions); 
+    }
+
+    public AccountDatabase getAccountDatabase() {
+        return accountDatabase;
+    }
+
+
+   
 }
