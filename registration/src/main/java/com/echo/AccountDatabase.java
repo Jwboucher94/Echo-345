@@ -122,6 +122,10 @@ class Account {
     Role role;
     String status; 
 
+    public String getLoginName() {
+        return loginName;
+    }
+
     public String getStatus() {
         return this.status;
     }

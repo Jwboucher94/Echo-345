@@ -4,13 +4,13 @@ import java.util.TimerTask;
 
    
 public class Session {
-    private String sessionId; 
-    private Role role; 
+    private String sessionId;
+    private Role role;
     private Account account;
     private SessionManager sessionManager;
     private Timer logoutTimer;
-    private long expirationTime; 
-    private boolean isActive; 
+    private long expirationTime;
+    private boolean isActive;
 
     public Session(String sessionId, Role role, Account account, SessionManager sessionManager, long expirationDuration) {
         this.sessionId = sessionId;
@@ -31,11 +31,23 @@ public class Session {
         }, expirationDuration);
     }
 
+    public String getUserRole() {
+        return role.toString(); // Replace with the actual method call to get the role as a String
+    }
+
+    public String getSessionOwner() {
+        return this.account.loginName; // Use the loginName field from Account as the session owner's name
+    }
+
+    public static boolean validateSession(Session session) {
+        return session.isActive() && System.currentTimeMillis() < session.getExpirationTime();
+    }
+
     public void logout() {
         if (isActive) {
             isActive = false;
-            sessionManager.removeSession(this.sessionId); 
-            logoutTimer.cancel(); 
+            sessionManager.removeSession(this.sessionId);
+            logoutTimer.cancel();
         }
     }
     
