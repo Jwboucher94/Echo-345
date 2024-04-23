@@ -31,8 +31,8 @@ public class Session {
         }, expirationDuration);
     }
 
-    public String getUserRole() {
-        return role.toString(); // Replace with the actual method call to get the role as a String
+    public Role getUserRole() {
+        return this.account.role; // Replace with the actual method call to get the role as a String
     }
 
     public String getSessionOwner() {

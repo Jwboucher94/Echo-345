@@ -5,7 +5,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.AfterEach;
 import static org.junit.jupiter.api.Assertions.*;
 
-class SessionManagementTest {
+import java.io.FileNotFoundException;
+import java.io.IOException;
+
+class SessionManagerTest {
 
     private AccountDatabase accountDatabase;
     private SessionManager sessionManager;
@@ -13,9 +16,17 @@ class SessionManagementTest {
     private Session testSession;
 
     @BeforeEach
-    void setUp() {
+    void setUp() throws FileNotFoundException {
         
-        accountDatabase = new AccountDatabase(getClass().getClassLoader().getResourceAsStream("MOCK_DATA.csv")); 
+        String csvFile = getClass().getClassLoader().getResource("MOCK_DATA.csv").getFile(); 
+        if (csvFile == null) {
+            throw new FileNotFoundException("MOCK_DATA.csv not found in test resources");
+        }
+        try {
+            accountDatabase = new AccountDatabase(csvFile);
+        } catch (IOException e) {
+            System.err.println("Error loading accounts: " + e.getMessage());
+        } 
         sessionManager = new SessionManager(accountDatabase);
         testAccount = new Account();
         testAccount.userID = 1;

@@ -13,12 +13,12 @@ public class SessionManager {
     }
 
     public Session login(String loginName, String password, Role role) throws InvalidCredentialsException {
-       
+
         for (Account account : accountDatabase.accounts.values()) {
+            
             if (account.loginName.equals(loginName) && account.password.equals(password)) {
             
                 if (account.role == role && !"blocked".equals(account.status)) {
-           
                     String sessionId = generateSessionId();
                     Session newSession = new Session(sessionId, role, account, this, 30 * 60 * 1000); // 30 minutes
                     activeSessions.put(sessionId, newSession);
@@ -36,7 +36,6 @@ public class SessionManager {
     }
 
     private String generateSessionId() {
-        
         return UUID.randomUUID().toString();
     }
 

@@ -33,12 +33,12 @@ public class StudentAccount {
     // The constructor is used to create a new StudentAccount
     // object with specified details like date of birth, gender, academic history, phone number, and login name.
     private String dob; //store the date of birth of student
-    private String gender; //gender (most likely binary)
+    private Gender gender; //gender from Gender enum
     private AcademicHistory academicHistory; //encapsulates the student's academic records
     private String phoneNumber; //stores the phone number of the student
     private String loginName; //Stores the login name of the student's account
 
-    public StudentAccount(String dob, String gender, String academicHistory, String phoneNumber, String loginName) {
+    public StudentAccount(String dob, Gender gender, String academicHistory, String phoneNumber, String loginName) {
         this.dob = dob;
         this.gender = gender;
         this.academicHistory = AcademicHistory.deserialize(academicHistory);
@@ -52,7 +52,7 @@ public class StudentAccount {
        
     }
 
-    public String getGender(Session session) throws ExpiredSessionException, AccessViolationException {
+    public Gender getGender(Session session) throws ExpiredSessionException, AccessViolationException {
         validateSession(session);
         return gender;
       
@@ -79,13 +79,13 @@ public class StudentAccount {
         this.dob = dob;
     }
 
-    public void setGender(Session session, String gender) throws ExpiredSessionException, AccessViolationException {
+    public void setGender(Session session, Gender gender) throws ExpiredSessionException, AccessViolationException {
         validateSessionForChange(session, true);
         this.gender = gender;
     }
 
     public void setAcademicHistory(Session session, String history) throws ExpiredSessionException, AccessViolationException {
-        validateSessionForChange(session, session.getUserRole().equals("Administrator") || session.getUserRole().equals("Faculty"));
+        validateSessionForChange(session, session.getUserRole().equals(Role.ADMIN) || session.getUserRole().equals(Role.FACULTY));
         this.academicHistory = AcademicHistory.deserialize(history);
     }
 
@@ -104,10 +104,15 @@ public class StudentAccount {
         if (!session.isActive()) {
             throw new ExpiredSessionException("Session is expired or inactive.");
         }
-        if (!session.getAccount().getLoginName().equals(this.loginName) && 
-            !session.getUserRole().equals("Administrator") && 
-            !session.getUserRole().equals("Faculty")) {
-            throw new AccessViolationException("Access denied you are not admin or faculty..");
+        String sessionloginName;
+        try {
+            sessionloginName = session.getAccount().getLoginName();
+        } catch (NullPointerException e) {
+            throw new NullPointerException("No loginName");
+        }
+        if (!sessionloginName.equals(this.loginName) && 
+            !session.getUserRole().equals(Role.ADMIN)) {
+            throw new AccessViolationException("Access denied: You are not Admin!");
         }
     }
 

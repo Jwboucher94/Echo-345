@@ -4,10 +4,9 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
@@ -16,19 +15,70 @@ public class AccountDatabase {
     Map<Integer, Account> accounts = new HashMap<>();                 
 
 
-    public AccountDatabase(InputStream inputStream) {                 
-        if (inputStream == null) {
-            throw new IllegalArgumentException("Input stream cannot be null");
+    // Constructor
+    public AccountDatabase(String csvFile) throws IOException {                 
+        if (csvFile == null) {
+            throw new IllegalArgumentException("csv string cannot be null");
         }
         try {
-            accounts = loadAccounts(inputStream);
+            accounts = loadAccounts(csvFile);
         } catch (IOException e) {
-           
+            System.err.println("Error loading accounts: " + e.getMessage());
         }
     }
 
-    public boolean checkCredentials(int userID, String loginName, 
-                                    String password, Role role) {       
+    StudentAccount createAccount(Session session, String loginName,
+    String password) throws AccessViolationException, ExpiredSessionException, DuplicateRecordException {
+        if (session == null) {
+            throw new AccessViolationException("Session is null");
+        }
+        if (session.isActive() == false) {
+            throw new ExpiredSessionException("Session is expired");
+        }
+        if (session.getRole() != Role.ADMIN) {
+            throw new AccessViolationException("Access violation: Only admin can create accounts");
+        }
+        Integer userID = accounts.size() + 1;
+        Account account = new Account();
+        account.userID = userID;
+        // check if the login name already exists
+        for (Account existingAccount : accounts.values()) {
+            if (existingAccount.loginName.equals(loginName)) {
+                throw new DuplicateRecordException("Login name already exists: " + loginName);
+            }
+        }
+        account.loginName = loginName;
+        account.password = password;
+        account.role = Role.STUDENT;
+        account.status = "active";
+        accounts.put(userID, account);
+        saveAccounts(session);
+        return new StudentAccount("01/01/2000", Gender.MALE, "History", "1234567890", loginName);
+    }
+
+    StudentAccount getStudentAccount(Session session, Integer userID) throws AccessViolationException, ExpiredSessionException, NotStudentException {
+        if (session == null) {
+            throw new AccessViolationException("Session is null");
+        }
+        if (session.isActive() == false) {
+            throw new ExpiredSessionException("Session is expired");
+        }
+        if (session.getRole() != Role.ADMIN) {
+            throw new AccessViolationException("Access violation: Only admin can get student accounts");
+        }
+        Account account = accounts.get(userID);
+        if (account == null) {
+            return null;
+        }
+        if (account.role != Role.STUDENT) {
+            throw new NotStudentException("Account is not a student account");
+        }
+        return account.getStudentAccount(session);
+    }
+
+    // takes userID, loginName, password, and role as arguments and checks if the credentials are valid
+    public boolean checkCredentials(Integer userID, String loginName, 
+                                    String password, Role role) {        
         Account account = accounts.get(userID);
         if (account == null || !account.loginName.equals(loginName) || 
             !account.password.equals(password) || !account.role.equals(role) || 
@@ -37,49 +87,88 @@ public class AccountDatabase {
         }
         return true; 
     }
-
-    public void block(int userID) throws AccountNotFoundException {    
-        Account account = accounts.get(userID);
-        if (account == null) {
+    // Block the account using userID
+    public void block(Session session, Integer userID) throws AccountNotFoundException, AccessViolationException, ExpiredSessionException {    
+        if (!accounts.containsKey(userID)) {
             throw new AccountNotFoundException("Account not found for ID: " + userID);
         }
+        Account account = accounts.get(userID);
         account.status = "blocked";
-        saveAccounts(); 
+        saveAccounts(session); 
     }
     
-    public void unblock(int userID) throws AccountNotFoundException {  
+    void viewAccount(Session session) throws AccessViolationException, ExpiredSessionException {
+        if (session == null) {
+            throw new AccessViolationException("Session is null");
+        }
+        if (session.isActive() == false) {
+            throw new ExpiredSessionException("Session is expired");
+        }
+        String loginName = session.getSessionOwner();
+        for (Account account : accounts.values()) {
+            if (account.loginName.equals(loginName)) {
+                System.out.println        ("         Current Users Data");
+                System.out.println        ("------------------------------------");
+                System.out.println        ("      Account ID: " + account.userID);
+                System.out.println        ("      Login Name: " + account.loginName);
+                System.out.println        ("            Role: " + account.role);
+                System.out.println        ("          Status: " + account.status);
+                if (account.role == Role.STUDENT) {
+                    try {
+                        StudentAccount studentAccount = account.getStudentAccount(session);
+                        System.out.println("   Date of Birth: " + studentAccount.getDob(session));
+                        System.out.println("          Gender: " + studentAccount.getGender(session));
+                        System.out.println("Academic History: " + studentAccount.getAcademicHistory(session));
+                        System.out.println("    Phone Number: " + studentAccount.getPhoneNumber(session));
+                    } catch (NotStudentException e) {
+                        System.out.println("Account is not a student account. You should not get this.");
+                    }
+                }
+                System.out.println        ("------------------------------------");
+            }
+        }
+        
+    }
+
+    // Unblock the account using userID
+    public void unblock(Session session, Integer userID) throws AccountNotFoundException, AccessViolationException, ExpiredSessionException {  
         Account account = accounts.get(userID);
         if (account == null) {
             throw new AccountNotFoundException("Account not found for ID: " + userID);
         }
         account.status = "active";
-        saveAccounts(); 
+        saveAccounts(session); 
     }
-
-    public Map<Integer, Account> loadAccounts(InputStream inputStream) throws IOException { 
-        accounts.clear();
-
-    
-        try (BufferedReader br = new BufferedReader(new InputStreamReader(inputStream))) {  
-    
-            String line;
+    // Load the accounts from a file and return a map of accounts
+    public Map<Integer, Account> loadAccounts(String csvFile) throws IOException { 
+        String line;
+        try (BufferedReader br = new BufferedReader(new FileReader(csvFile))) {  
             while ((line = br.readLine()) != null) {
                 String[] fields = line.split(",");
-                if (fields.length == 5) {
+                if (fields.length >= 5) {
                     Account account = new Account();
                     account.userID = Integer.parseInt(fields[0]);
                     account.loginName = fields[1];
                     account.password = fields[2];
                     account.role = Role.valueOf(fields[3]);
                     account.status = fields[4];
-                    accounts.put(account.userID, account);
+                    // If the account is a student account, create a student account object
+                    if (account.role == Role.STUDENT) {
+                        StudentAccount studentAccount = new StudentAccount(fields[5], Gender.valueOf(fields[6]), fields[7], fields[8], fields[1]);
+                        account.setStudentAccount(studentAccount);
+                    }
+                    if (!accounts.containsKey(account.userID)) {
+                        accounts.put(account.userID, account);
+                    }
                 } 
             }
-        } catch (IOException e) {                     
+        } catch (IOException e) {
             System.err.println("Error loading accounts: " + e.getMessage());
         } 
         return accounts;
     }
+
+    // Get the absolute path of the file
     private String getResourcePath(String filename) {          
         URL url = getClass().getClassLoader().getResource(filename);
         if (url == null) {
@@ -87,57 +176,111 @@ public class AccountDatabase {
         }
         return new File(url.getFile()).getAbsolutePath();
     }
-    
-    
-    public void saveAccounts() {    
-        String filePath = getResourcePath("MOCK_DATA.csv");     
-        System.out.println("Absolute Path: " + new File(filePath).getAbsolutePath());
+    // Save the accounts to a file
+    public void saveAccounts(Session session) throws AccessViolationException, ExpiredSessionException {    
+        String filePath = getResourcePath("MOCK_DATA.csv");
         try (FileWriter fw = new FileWriter(filePath);
              BufferedWriter bw = new BufferedWriter(fw)) {
                 for (Account account : accounts.values()) {
-                    String line = String.format("%d,%s,%s,%s,%s\n",
+                    String line;
+                    try { 
+                        StudentAccount studentAccount = account.getStudentAccount(session);
+                        line = String.format("%d,%s,%s,%s,%s,%s,%s,%s,%s\n",
+                            account.userID, account.loginName, account.password, account.role, account.status, studentAccount.getDob(session), studentAccount.getGender(session), studentAccount.getAcademicHistory(session), studentAccount.getPhoneNumber(session));
+                    } catch (NotStudentException e) {
+                        // Not a student account
+                        line = String.format("%d,%s,%s,%s,%s\n",
                             account.userID, account.loginName, account.password, account.role, account.status);
+                    }
                     bw.write(line);
                 }
         } catch (IOException e) {
             System.err.println("Error saving accounts: " + e.getMessage());
         } 
     }
-
+    // Get an account using userID
+    public Account getsAccount(Integer userID) {
+        Account account = accounts.get(userID);
+        return account;
+    }
+    // Reload the accounts from the file
     public void reloadAccounts() throws IOException {  
-        InputStream inputStream = getClass().getClassLoader().getResourceAsStream("MOCK_DATA.csv"); 
-        if (inputStream == null) {
+        String csvFile = getClass().getClassLoader().getResource("MOCK_DATA.csv").getFile(); 
+        if (csvFile == null) {
             throw new FileNotFoundException("MOCK_DATA.csv not found in test resources");
         }
-        accounts = loadAccounts(inputStream); 
+        accounts = loadAccounts(csvFile); 
     }
+
+
     
+    public class DuplicateRecordException extends Exception {
+        public DuplicateRecordException(String message) {
+            super(message);
+        }
+    }
     
 }
 
+// Account class
 class Account {    
-    int userID;
+    Integer userID;
     String loginName;
     String password;
     Role role;
     String status; 
+    private StudentAccount studentAccount; // Student account object
 
+    public void setStudentAccount(StudentAccount studentAccount) {
+        if (role == Role.STUDENT) { 
+            this.studentAccount = studentAccount;
+        }
+    }
+    
+    public StudentAccount getStudentAccount(Session session) throws NotStudentException {
+        if (role == Role.STUDENT) { 
+            try {
+                this.studentAccount.getLoginName(session);
+            } catch (ExpiredSessionException e) {
+                System.err.println("Session expired");
+            } catch (AccessViolationException e) {
+                System.err.println("Access violation");
+            }
+            return this.studentAccount;
+        } else {
+            throw new NotStudentException("Account is not a student account");
+        }
+    }
+
+    public Integer getUserID() {
+        return userID;
+    }
+    public Role getRole() {
+        return role;
+    }
     public String getLoginName() {
-        return loginName;
+        return this.loginName;
     }
 
     public String getStatus() {
         return this.status;
     }
-
     
     public void setStatus(String status) {
         this.status = status;
     }
 }
 
+// Roles for the account
 enum Role {  
     STUDENT,
     ADMIN,
-    ADVISOR;
+    ADVISOR,
+    FACULTY;
+}
+
+enum Gender {
+    MALE,
+    FEMALE,
+    OTHER;
 }
