@@ -58,7 +58,7 @@ class SessionManagerTest {
 
     @Test
     void testLogoutMethod() {
-        testSession.logout();
+        testSession.logout(false);
         assertFalse(testSession.isActive(), "Session should be set to inactive after logout");
         assertNull(sessionManager.getActiveSessions().get(testSession.getSessionId()), "Session should be removed from SessionManager");
     }
@@ -89,7 +89,7 @@ class SessionManagerTest {
 void testSessionListManagement() throws SessionManager.InvalidCredentialsException {
    
     for (Session session : sessionManager.getActiveSessions().values()) {
-        session.logout();
+        session.logout(false);
     }
 
 
@@ -98,9 +98,9 @@ void testSessionListManagement() throws SessionManager.InvalidCredentialsExcepti
 
    
     assertEquals(2, sessionManager.getActiveSessions().size(), "SessionManager should have two active sessions");
-    session1.logout();
+    session1.logout(false);
     assertEquals(1, sessionManager.getActiveSessions().size(), "SessionManager should have one active session after the first logout");
-    session2.logout();
+    session2.logout(false);
     assertTrue(sessionManager.getActiveSessions().isEmpty(), "SessionManager should have no active sessions after both logouts");
 }
 

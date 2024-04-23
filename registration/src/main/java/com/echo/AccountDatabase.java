@@ -129,6 +129,36 @@ public class AccountDatabase {
         }
         
     }
+    // need a test for this
+    boolean passwordCheck(String password) {
+        boolean test = password.matches("^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$ %^&*-]).{8,}$");
+        return test;
+    }
+
+    // need a test for this
+    void passwordCheckInstruction() {
+        System.out.println("Password must contain, at minimum:\n"+
+                           "8 Total characters\n"+
+                           "1 uppercase letter\n"+
+                           "1 lowercase letter\n"+
+                           "1 number\n"+
+                           "1 special character.");
+    }
+
+    // need a test for this
+    boolean changePassword(Session session, String password) {
+        if (passwordCheck(password)) {
+            session.logout(true);
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    boolean changeLoginName(Session session, String loginName) {
+        Session.validateSession(session);
+        return true;
+    }
 
     // Unblock the account using userID
     public void unblock(Session session, Integer userID) throws AccountNotFoundException, AccessViolationException, ExpiredSessionException {  

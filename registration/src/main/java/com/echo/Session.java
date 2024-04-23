@@ -25,7 +25,7 @@ public class Session {
             @Override
             public void run() {
                 if (isActive) {
-                    logout();
+                    logout(false);
                 }
             }
         }, expirationDuration);
@@ -43,7 +43,7 @@ public class Session {
         return session.isActive() && System.currentTimeMillis() < session.getExpirationTime();
     }
 
-    public void logout() {
+    public void logout(Boolean modified) {
         if (isActive) {
             isActive = false;
             sessionManager.removeSession(this.sessionId);
