@@ -33,7 +33,7 @@ class SessionManagerTest {
         testAccount.loginName = "testuser";
         testAccount.password = "password";
         testAccount.role = Role.STUDENT;
-        testAccount.status = "active";
+        testAccount.status = AccountStatus.ACTIVE;
 
        
         accountDatabase.accounts.put(testAccount.userID, testAccount);
@@ -45,7 +45,7 @@ class SessionManagerTest {
     @Test
     void testSessionConstructor() {
         assertNotNull(testSession, "Session should be created successfully");
-        assertEquals("active", testSession.getAccount().getStatus(), "Session account should be active");
+        assertEquals(AccountStatus.ACTIVE, testSession.getAccount().getStatus(), "Session account should be active");
         assertTrue(testSession.isActive(), "Session should be active upon creation");
     }
 
@@ -79,7 +79,7 @@ class SessionManagerTest {
 
     @Test
     void testLoginMethodWithBlockedAccount() {
-        testAccount.setStatus("blocked"); 
+        testAccount.setStatus(AccountStatus.BLOCKED); 
         assertThrows(SessionManager.InvalidCredentialsException.class, () -> {
             sessionManager.login("testuser", "password", Role.STUDENT);
         }, "InvalidCredentialsException should be thrown for a blocked account");

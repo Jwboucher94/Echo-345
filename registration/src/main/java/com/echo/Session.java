@@ -11,6 +11,7 @@ public class Session {
     private Timer logoutTimer;
     private long expirationTime;
     private boolean isActive;
+    private boolean hasModified;
 
     public Session(String sessionId, Role role, Account account, SessionManager sessionManager, long expirationDuration) {
         this.sessionId = sessionId;
@@ -25,7 +26,7 @@ public class Session {
             @Override
             public void run() {
                 if (isActive) {
-                    logout(false);
+                    logout(hasModified);
                 }
             }
         }, expirationDuration);
@@ -45,6 +46,15 @@ public class Session {
 
     public void logout(Boolean modified) {
         if (isActive) {
+            if (modified) {
+                try {
+                    sessionManager.saveAccount(this);
+                } catch (AccessViolationException e) {
+                    System.err.println("Access Violation: " + e.getMessage());
+                } catch (ExpiredSessionException e) {
+                    System.err.println("Session expired: " + e.getMessage());
+                }
+            }
             isActive = false;
             sessionManager.removeSession(this.sessionId);
             logoutTimer.cancel();
@@ -84,9 +94,17 @@ public class Session {
     public void setActive(boolean active) {
         isActive = active;
     }
+
+    public boolean getHasModified() {
+        return hasModified;
+    }
     
+    public void setHasModified() {
+        hasModified = true;
+    }
 
-
-
+    public void setHasModified(boolean modified) {
+        hasModified = modified;
+    }
 
 }

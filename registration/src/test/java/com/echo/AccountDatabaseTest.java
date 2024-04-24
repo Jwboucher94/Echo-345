@@ -20,19 +20,22 @@ public class AccountDatabaseTest {
             throw new FileNotFoundException("MOCK_DATA.csv not found in test resources");
         }
         accountDB = new AccountDatabase(csvFile);
-        accountDB.loadAccounts(csvFile);
-        System.out.println("\n-----\nAccounts loaded");
+        accountDB.loadAccounts(csvFile, true);
+        /* for (Account account : accountDB.accounts.values()) {
+            System.out.println(account);
+        } */
         SessionManager sessionManager = new SessionManager(accountDB);
         try {
             session = sessionManager.login("admin", "password", Role.ADMIN); // Use valid credentials
         } catch (SessionManager.InvalidCredentialsException e) {
             fail("Unexpected InvalidCredentialsException");
+            System.err.println();
         }
     }
 
     @Test
     public void testCheckCredentials_ValidCredentials() {
-        System.out.println("\nRunning test: testCheck - Valid");
+        //System.out.println("\nRunning test: testCheck - Valid");
         assertTrue(accountDB.checkCredentials(359413893, "lbullimore6", "cV1{8NjIwh", Role.STUDENT));
     }
 
@@ -56,9 +59,9 @@ public class AccountDatabaseTest {
         System.out.println("\nRunning test: testBlockAccount()");
         Integer userIdToblock = 552281454; 
         try {
-            System.out.println("Blocking account");
+            // System.out.println("Blocking account");
             accountDB.block(session, userIdToblock);
-            System.out.println("Reloading accounts");
+            // System.out.println("Reloading accounts");
             accountDB.reloadAccounts(); 
             assertFalse(accountDB.checkCredentials(userIdToblock, "acicutto1", "kR4E9rcFM", Role.STUDENT)); 
         } catch(AccountNotFoundException e) {

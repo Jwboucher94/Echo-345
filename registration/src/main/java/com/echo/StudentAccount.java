@@ -36,14 +36,14 @@ public class StudentAccount {
     private Gender gender; //gender from Gender enum
     private AcademicHistory academicHistory; //encapsulates the student's academic records
     private String phoneNumber; //stores the phone number of the student
-    private String loginName; //Stores the login name of the student's account
+    private Integer userID; //Stores the login name of the student's account
 
-    public StudentAccount(String dob, Gender gender, String academicHistory, String phoneNumber, String loginName) {
+    public StudentAccount(String dob, Gender gender, String academicHistory, String phoneNumber, Integer userID) {
         this.dob = dob;
         this.gender = gender;
         this.academicHistory = AcademicHistory.deserialize(academicHistory);
         this.phoneNumber = phoneNumber;
-        this.loginName = loginName;
+        this.userID = userID;
     }
 
     public String getDob(Session session) throws ExpiredSessionException, AccessViolationException {
@@ -68,9 +68,9 @@ public class StudentAccount {
         return phoneNumber;
     }
 
-    public String getLoginName(Session session) throws ExpiredSessionException, AccessViolationException {
+    public Integer getUserID(Session session) throws ExpiredSessionException, AccessViolationException {
         validateSession(session);
-        return loginName;
+        return userID;
     }
 
 
@@ -85,7 +85,7 @@ public class StudentAccount {
     }
 
     public void setAcademicHistory(Session session, String history) throws ExpiredSessionException, AccessViolationException {
-        validateSessionForChange(session, session.getUserRole().equals(Role.ADMIN) || session.getUserRole().equals(Role.FACULTY));
+        validateSessionForChange(session, session.getUserRole().equals(Role.ADMIN));
         this.academicHistory = AcademicHistory.deserialize(history);
     }
 
@@ -95,8 +95,8 @@ public class StudentAccount {
     }
 
   
-    public void setLoginName(Session session, String loginName) throws AccessViolationException {
-        throw new AccessViolationException("Cannot change login name.");
+    public void setUserID(Session session, Integer userID) throws AccessViolationException {
+        throw new AccessViolationException("Cannot change user ID.");
     }
 
 
@@ -104,13 +104,13 @@ public class StudentAccount {
         if (!session.isActive()) {
             throw new ExpiredSessionException("Session is expired or inactive.");
         }
-        String sessionloginName;
+        Integer sessionuserID;
         try {
-            sessionloginName = session.getAccount().getLoginName();
+            sessionuserID = session.getAccount().getUserID();
         } catch (NullPointerException e) {
-            throw new NullPointerException("No loginName");
+            throw new NullPointerException("No userID");
         }
-        if (!sessionloginName.equals(this.loginName) && 
+        if (!sessionuserID.equals(this.userID) && 
             !session.getUserRole().equals(Role.ADMIN)) {
             throw new AccessViolationException("Access denied: You are not Admin!");
         }

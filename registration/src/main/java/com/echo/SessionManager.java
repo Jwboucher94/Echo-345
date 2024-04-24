@@ -18,12 +18,12 @@ public class SessionManager {
             
             if (account.loginName.equals(loginName) && account.password.equals(password)) {
             
-                if (account.role == role && !"blocked".equals(account.status)) {
+                if (account.role == role && !AccountStatus.BLOCKED.equals(account.status)) {
                     String sessionId = generateSessionId();
                     Session newSession = new Session(sessionId, role, account, this, 30 * 60 * 1000); // 30 minutes
                     activeSessions.put(sessionId, newSession);
                     return newSession;
-                } else if ("blocked".equals(account.status)) {
+                } else if (AccountStatus.BLOCKED.equals(account.status)) {
                     throw new InvalidCredentialsException("Account is blocked.");
                 }
             }
@@ -52,6 +52,10 @@ public class SessionManager {
 
     public AccountDatabase getAccountDatabase() {
         return accountDatabase;
+    }
+
+    public void saveAccount(Session session) throws AccessViolationException, ExpiredSessionException {
+        accountDatabase.saveAccounts(session);
     }
 
 
