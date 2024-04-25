@@ -26,7 +26,8 @@ public class Main {
         Boolean quit = false;
         while (!quit) {
             clearScreen();
-            System.out.println("Welcome to the Registration System!");
+            System.out.println(" Welcome to the Registration System!");
+            System.out.println("------------------------------------");
             System.out.println("Please select a role:");
             counter = 1;
             for (Role role : Role.values()){
@@ -55,11 +56,11 @@ public class Main {
                     return;
                 }
             }
-            clearScreen();
-            System.out.println("Login Successful. Welcome, " + session.getAccount().getLoginName());
+            clearScreen(("Login Successful. Welcome, " + session.getAccount().getLoginName()));
+            System.out.println();
             Role loginRole = session.getRole();
             Boolean logout = false;
-            while (Session.validateSession(session) && !logout){
+            while (session.validateSession() && !logout){
                 if (loginRole == Role.ADMIN) {
                     logout = AdminMenu.displayAdminMenu(session, logout);
                 } else if (loginRole == Role.STUDENT) {
@@ -76,11 +77,11 @@ public class Main {
             session.logout(session.getHasModified());
             session = null;
             logout = false;
-
+            System.out.println("Press Enter to continue");
         }
     }
 
-    private static Session getSession (SessionManager sessionManager, Role role) {
+    static Session getSession (SessionManager sessionManager, Role role) {
         clearScreen();
         System.out.println("You have selected " + role + " role.");
         System.out.println("Please enter your username:");
@@ -111,6 +112,16 @@ public class Main {
         }
     }
 
+    public static void clearScreen(String title) {
+        System.out.println("\n".repeat(50));
+        int titleLength = title.length();
+        int dashLength = 0;
+        if (titleLength < 36) {
+            dashLength = 36 - titleLength;
+        }
+        System.out.println(" ".repeat(dashLength / 2) + title + " ".repeat(dashLength / 2));
+        System.out.println("------------------------------------");
+    }
     public static void clearScreen() {
         System.out.println("\n".repeat(50));
     }

@@ -12,14 +12,16 @@ public class Session {
     private long expirationTime;
     private boolean isActive;
     private boolean hasModified;
+    StudentAccount studentAccount;
 
-    public Session(String sessionId, Role role, Account account, SessionManager sessionManager, long expirationDuration) {
-        this.sessionId = sessionId;
+    public Session(String i, Role role, Account account, SessionManager sessionManager, long expirationDuration) {
+        this.sessionId = i;
         this.role = role;
         this.account = account;
         this.sessionManager = sessionManager;
         this.expirationTime = System.currentTimeMillis() + expirationDuration;
         this.isActive = true;
+        this.studentAccount = account.studentAccount;
 
         this.logoutTimer = new Timer(true);
         logoutTimer.schedule(new TimerTask() {
@@ -40,8 +42,8 @@ public class Session {
         return this.account.loginName; // Use the loginName field from Account as the session owner's name
     }
 
-    public static boolean validateSession(Session session) {
-        return session.isActive() && System.currentTimeMillis() < session.getExpirationTime();
+    public boolean validateSession() {
+        return this.isActive() && System.currentTimeMillis() < this.getExpirationTime();
     }
 
     public void logout(Boolean modified) {
@@ -49,6 +51,7 @@ public class Session {
             if (modified) {
                 try {
                     sessionManager.saveAccount(this);
+                    System.out.println("Session saved successfully.");
                 } catch (AccessViolationException e) {
                     System.err.println("Access Violation: " + e.getMessage());
                 } catch (ExpiredSessionException e) {
@@ -57,6 +60,7 @@ public class Session {
             }
             isActive = false;
             sessionManager.removeSession(this.sessionId);
+            System.out.println("Session logged out.");
             logoutTimer.cancel();
         }
     }

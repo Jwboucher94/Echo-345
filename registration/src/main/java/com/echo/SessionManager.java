@@ -6,7 +6,7 @@ import java.util.UUID;
 public class SessionManager {
     private Map<String, Session> activeSessions = new HashMap<>();
     private AccountDatabase accountDatabase;
-
+    public static Integer timeInteger = 30 * 60 * 1000; // to set account expiration time to 30 minutes
 
     public SessionManager(AccountDatabase accountDatabase) {
         this.accountDatabase = accountDatabase;
@@ -14,13 +14,13 @@ public class SessionManager {
 
     public Session login(String loginName, String password, Role role) throws InvalidCredentialsException {
 
-        for (Account account : accountDatabase.accounts.values()) {
+        for (Account account : accountDatabase.accountDB.values()) {
             
             if (account.loginName.equals(loginName) && account.password.equals(password)) {
             
                 if (account.role == role && !AccountStatus.BLOCKED.equals(account.status)) {
                     String sessionId = generateSessionId();
-                    Session newSession = new Session(sessionId, role, account, this, 30 * 60 * 1000); // 30 minutes
+                    Session newSession = new Session(sessionId, role, account, this, timeInteger); // 30 minutes
                     activeSessions.put(sessionId, newSession);
                     return newSession;
                 } else if (AccountStatus.BLOCKED.equals(account.status)) {
@@ -35,8 +35,10 @@ public class SessionManager {
         activeSessions.remove(sessionId);
     }
 
-    private String generateSessionId() {
-        return UUID.randomUUID().toString();
+    private String generateSessionId() { 
+        UUID uuid = UUID.randomUUID();
+        String uuidString = uuid.toString();
+        return uuidString;
     }
 
     

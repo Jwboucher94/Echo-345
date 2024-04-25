@@ -36,7 +36,7 @@ class SessionManagerTest {
         testAccount.status = AccountStatus.ACTIVE;
 
        
-        accountDatabase.accounts.put(testAccount.userID, testAccount);
+        accountDatabase.accountDB.put(testAccount.userID, testAccount);
 
 
         testSession = new Session("sessionId", Role.STUDENT, testAccount, sessionManager, 1000); 

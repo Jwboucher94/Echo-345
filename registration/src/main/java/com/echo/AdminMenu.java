@@ -6,17 +6,17 @@ public class AdminMenu {
     public static boolean displayAdminMenu(Session session, Boolean logout) {
         System.out.println("Admin Menu");
         System.out.println("1. Create Account");
-        System.out.println("2. Delete Account");
+        System.out.println("2. Manage Student Account Access");
         System.out.println("3. View My Account");
         System.out.println("4. Save and Logout");
         System.out.println("5. Exit without saving");
-
+        String loginName;
         Integer input = Main.getMenuInput(5);
         switch (input) {
             case 1:
-                System.out.println("Create New Student Account");
+                Main.clearScreen("Create New Student Account");
                 System.out.println("Enter login name:");
-                String loginName = Main.getInput();
+                loginName = Main.getInput();
                 System.out.println("Enter password:");
                 String password = Main.getInput();
                 try {
@@ -35,7 +35,12 @@ public class AdminMenu {
                 }
                 break;
             case 2:
-                System.out.println("Delete Account");
+                Main.clearScreen("Student Account Management");
+                System.out.println("Enter the Login Name of the student account you want to manage:");
+                loginName = Main.getInput();
+                while (!AccountDatabase.changeLoginName(session, loginName)) {
+                    loginName = Main.getInput();
+                }
                 break;
             case 3:
                 try {

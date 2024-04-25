@@ -36,7 +36,8 @@ public class StudentAccount {
     private Gender gender; //gender from Gender enum
     private AcademicHistory academicHistory; //encapsulates the student's academic records
     private String phoneNumber; //stores the phone number of the student
-    private Integer userID; //Stores the login name of the student's account
+    private Integer userID; //Stores the User ID of the student's account
+    private Boolean hasModified = false;
 
     public StudentAccount(String dob, Gender gender, String academicHistory, String phoneNumber, Integer userID) {
         this.dob = dob;
@@ -80,7 +81,7 @@ public class StudentAccount {
     }
 
     public void setGender(Session session, Gender gender) throws ExpiredSessionException, AccessViolationException {
-        validateSessionForChange(session, true);
+        validateSession(session);
         this.gender = gender;
     }
 
@@ -90,7 +91,7 @@ public class StudentAccount {
     }
 
     public void setPhoneNumber(Session session, String phoneNumber) throws ExpiredSessionException, AccessViolationException {
-        validateSessionForChange(session, true);
+        validateSession(session);
         this.phoneNumber = phoneNumber;
     }
 
@@ -101,22 +102,28 @@ public class StudentAccount {
 
 
     private void validateSession(Session session) throws ExpiredSessionException, AccessViolationException {
-        if (!session.isActive()) {
+        if (!session.validateSession()) {
             throw new ExpiredSessionException("Session is expired or inactive.");
         }
-        Integer sessionuserID;
+        Integer sessionuserID = 0;
         try {
-            sessionuserID = session.getAccount().getUserID();
+            Account account = session.getAccount();
+            sessionuserID = account.getUserID();
         } catch (NullPointerException e) {
             throw new NullPointerException("No userID");
         }
         if (!sessionuserID.equals(this.userID) && 
             !session.getUserRole().equals(Role.ADMIN)) {
-            throw new AccessViolationException("Access denied: You are not Admin!");
+            if (this.hasModified == true) {
+                throw new AccessViolationException("Access denied: You are not Admin!");
+                // if not modified, then we're probably just saving the session
+            }
         }
     }
 
-    private void validateSessionForChange(Session session, boolean isChangeAllowed) throws ExpiredSessionException, AccessViolationException {
+
+
+    void validateSessionForChange(Session session, boolean isChangeAllowed) throws ExpiredSessionException, AccessViolationException {
         validateSession(session); 
         if (!isChangeAllowed) {
             throw new AccessViolationException("You are not authorized to modify this field.");
