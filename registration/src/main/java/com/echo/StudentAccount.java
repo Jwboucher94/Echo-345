@@ -91,7 +91,7 @@ public class StudentAccount {
     }
 
 
-    private void validateSession(Session session) throws ExpiredSessionException, AccessViolationException {
+    void validateSession(Session session) throws ExpiredSessionException, AccessViolationException {
         if (!session.validateSession()) {
             throw new ExpiredSessionException("Session is expired or inactive.");
         }
@@ -102,6 +102,8 @@ public class StudentAccount {
         } catch (NullPointerException e) {
             throw new NullPointerException("No userID");
         }
+        
+
         if (!sessionuserID.equals(this.userID) && 
             !session.getUserRole().equals(Role.ADMIN)) {
             if (this.hasModified == true) {

@@ -4,44 +4,32 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.AfterEach;
 import static org.junit.jupiter.api.Assertions.*;
-
-import java.io.FileNotFoundException;
 import java.io.IOException;
 
 class SessionManagerTest {
-
     private AccountDatabase accountDatabase;
-    private SessionManager sessionManager;
     private Account testAccount;
     private Session testSession;
+    private SessionManager sessionManager;
 
-    @BeforeEach
-    void setUp() throws FileNotFoundException {
+    @BeforeEach 
+    
+    public void setup() throws IOException {
         
-        String csvFile = getClass().getClassLoader().getResource("MOCK_DATA.csv").getFile(); 
-        if (csvFile == null) {
-            throw new FileNotFoundException("MOCK_DATA.csv not found in test resources");
-        }
         try {
-            accountDatabase = new AccountDatabase(csvFile);
+            accountDatabase = new AccountDatabase("test_only_data.csv");
         } catch (IOException e) {
-            System.err.println("Error loading accounts: " + e.getMessage());
-        } 
-        sessionManager = new SessionManager(accountDatabase);
-        testAccount = new Account();
-        testAccount.userID = 1;
-        testAccount.loginName = "testuser";
-        testAccount.password = "password";
-        testAccount.role = Role.STUDENT;
-        testAccount.status = AccountStatus.ACTIVE;
-
-       
-        accountDatabase.accountDB.put(testAccount.userID, testAccount);
-
-
-        testSession = new Session("sessionId", Role.STUDENT, testAccount, sessionManager, 1000); 
+            System.err.println("Error reading file");
+        }
+        /* for (Account account : accountDB.accounts.values()) {
+            System.out.println(account);
+        } */
+        testAccount = new Account(1, "testuser", "password", Role.STUDENT, AccountStatus.ACTIVE);
+        this.sessionManager = new SessionManager(accountDatabase);
+        accountDatabase.accountDB.put(99, testAccount);
+        testSession = new Session("sessionId", Role.STUDENT, testAccount, sessionManager, 1000);
+        testAccount = testSession.getAccount();
     }
-
     @Test
     void testSessionConstructor() {
         assertNotNull(testSession, "Session should be created successfully");

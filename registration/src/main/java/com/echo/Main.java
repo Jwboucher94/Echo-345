@@ -60,19 +60,22 @@ public class Main {
             System.out.println();
             Role loginRole = session.getRole();
             Boolean logout = false;
-            while (session.validateSession() && !logout){
-                if (loginRole == Role.ADMIN) {
-                    logout = AdminMenu.displayAdminMenu(accountDB, session, logout);
-                } else if (loginRole == Role.STUDENT) {
-                    logout = StudentMenu.displayStudentMenu(accountDB, session, logout);
-                } else if (loginRole == Role.ADVISOR) {
-                    logout = AdvisorMenu.displayAdvisorMenu(accountDB, session, logout);
-                } else {
-                    System.err.println("Invalid role: " + loginRole);
+            try {
+                while (session.validateSession() && !logout){
+                    if (loginRole == Role.ADMIN) {
+                        logout = AdminMenu.displayAdminMenu(accountDB, session, logout);
+                    } else if (loginRole == Role.STUDENT) {
+                        logout = StudentMenu.displayStudentMenu(accountDB, session, logout);
+                    } else if (loginRole == Role.ADVISOR) {
+                        logout = AdvisorMenu.displayAdvisorMenu(accountDB, session, logout);
+                    } else {
+                        System.err.println("Invalid role: " + loginRole);
+                    }
                 }
-            }
-            if (!logout) {
-                System.out.println("Session expired. Logging out...");
+            } catch (AccessViolationException | ExpiredSessionException e) {
+                System.err.println("Session expired: " + e.getMessage());
+                logout = false;
+                System.err.println("Session expired. Logging out...");
             }
             session.logout(session.getHasModified());
             session = null;

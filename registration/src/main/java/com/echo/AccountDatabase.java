@@ -2,7 +2,6 @@ package com.echo;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -11,21 +10,23 @@ import java.util.HashMap;
 import java.util.Map;
 
 
+
 public class AccountDatabase {
     Map<Integer, Account> accountDB = new HashMap<>();
     ResourceLoader loader = new ResourceLoader();
     String csvFileName;    
-    String csvFile;
+    String csvFilePath;
     
 
     // AccountDatabase Constructor
-    public AccountDatabase(String csvFile) throws IOException {                 
-        if (csvFile == null) {
+    public AccountDatabase(String csvFileName) throws IOException {                 
+        if (csvFileName == null) {
             throw new IllegalArgumentException("csv string cannot be null");
         }
-        this.csvFileName = csvFile;
+        this.csvFileName = csvFileName;
+        this.csvFilePath = this.loader.getResourcePath(csvFileName);
         try {
-            this.accountDB = loadAccounts(csvFile, false);
+            this.accountDB = loadAccounts(csvFileName, false);
         } catch (IOException e) {
             System.err.println("Error loading accounts: " + e.getMessage());
         }
@@ -158,17 +159,22 @@ public class AccountDatabase {
     }
     
     // view the current user's account
+
     void viewAccount(Session session) throws AccessViolationException, ExpiredSessionException {
+        String loginName = session.getSessionOwner();
+        viewAccount(session, loginName);
+    }
+
+    void viewAccount(Session session, String loginName) throws AccessViolationException, ExpiredSessionException {
         if (session == null) {
             throw new AccessViolationException("Session is null");
         }
         if (session.isActive() == false) {
             throw new ExpiredSessionException("Session is expired");
         }
-        String loginName = session.getSessionOwner();
         for (Account account : this.accountDB.values()) {
             if (account.loginName.equals(loginName)) {
-                System.out.println        ("         Current Users Data");
+                System.out.println        ("         "+ loginName+"'s Data");
                 System.out.println        ("------------------------------------");
                 System.out.println        ("      Account ID: " + account.userID);
                 System.out.println        ("      Login Name: " + account.loginName);
@@ -236,7 +242,9 @@ public class AccountDatabase {
     // check if you can change the login name
     static boolean changeLoginName(Session session, String loginName) {
         try {
-            session.getAccount().studentAccount.validateSessionForChange(session, true);
+            if (session.getAccount().studentAccount == null) {
+                session.getAccount().studentAccount.validateSessionForChange(session, true);
+            }
         }  catch (AccessViolationException e) {
             System.err.println("Access violation: " + e.getMessage());
         } catch (ExpiredSessionException e) {
@@ -276,14 +284,14 @@ public class AccountDatabase {
     // Load the accounts from a file and return a map of accounts
     public Map<Integer, Account> loadAccounts(String csvFileName, Boolean test) throws IOException {
         try {
-            csvFile = loader.getResourcePath(csvFileName);
+            csvFilePath = loader.getResourcePath(csvFileName);
         } catch (IOException e) {
             System.err.println("Error saving accounts: " + e.getMessage());
-            csvFile = null;
+            csvFilePath = null;
         }
         String line;
         ArrayList<Account> brokenAccounts = new ArrayList<>();
-        try (BufferedReader br = new BufferedReader(new FileReader(csvFile))) {  
+        try (BufferedReader br = new BufferedReader(new FileReader(csvFilePath))) {  
             while ((line = br.readLine()) != null) {
                 String[] fields = line.split(",");
                 if (fields.length >= 5) {
@@ -370,12 +378,12 @@ public class AccountDatabase {
     // Save the accounts to a file
     public void saveAccounts(Session session) throws AccessViolationException, ExpiredSessionException {
         try {
-            csvFile = loader.getResourcePath(csvFileName);
+            csvFilePath = loader.getResourcePath(csvFileName);
         } catch (IOException e) {
             System.err.println("Error saving accounts: " + e.getMessage());
-            csvFile = null;
+            csvFilePath = null;
         }
-        try (FileWriter fw = new FileWriter(csvFile);
+        try (FileWriter fw = new FileWriter(csvFilePath);
             BufferedWriter bw = new BufferedWriter(fw)) {
                 for (Account account : accountDB.values()) {
                     String line;
@@ -411,11 +419,7 @@ public class AccountDatabase {
 
     // Reload the accounts from the file
     public void reloadAccounts() throws IOException {  
-        String csvFile = getClass().getClassLoader().getResource(this.csvFileName).getFile(); 
-        if (csvFile == null) {
-            throw new FileNotFoundException(this.csvFileName + " not found in test resources");
-        }
-        accountDB = loadAccounts(csvFile, false); 
+        accountDB = loadAccounts(this.csvFileName, false); 
     }    
 }
 

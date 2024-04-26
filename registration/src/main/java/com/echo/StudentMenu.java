@@ -5,7 +5,7 @@ public class StudentMenu {
 
     public static Boolean displayStudentMenu(AccountDatabase accountDBIN, Session session, Boolean logout) {
         accountDB = accountDBIN;
-        System.out.println("Student Menu");
+        Main.clearScreen("Student Menu");
         System.out.println("1. View My Account");
         System.out.println("2. Update My Account");
         System.out.println("3. Save and Logout");
@@ -17,6 +17,8 @@ public class StudentMenu {
                 try {
                     Main.clearScreen();
                     accountDB.viewAccount(session);
+                    System.out.println("\nPress enter to continue...");
+                    Main.getInput();
                 } catch (AccessViolationException e) {
                     System.err.println("Access violation: " + e.getMessage());
                 } catch (ExpiredSessionException e) {
