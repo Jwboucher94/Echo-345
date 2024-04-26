@@ -1,9 +1,7 @@
 package com.echo;
 
-import com.echo.AccountDatabase.DuplicateRecordException;
-
 public class AdminMenu {
-    public static boolean displayAdminMenu(Session session, Boolean logout) {
+    public static boolean displayAdminMenu(AccountDatabase accountDB, Session session, Boolean logout) {
         System.out.println("Admin Menu");
         System.out.println("1. Create Account");
         System.out.println("2. Manage Student Account Access");
@@ -20,7 +18,7 @@ public class AdminMenu {
                 System.out.println("Enter password:");
                 String password = Main.getInput();
                 try {
-                    StudentAccount studentAccount = session.getSessionManager().getAccountDatabase().createAccount(session, loginName, password);
+                    StudentAccount studentAccount = accountDB.createAccount(session, loginName, password);
                     System.out.println("Account created successfully. User ID: " + studentAccount.getUserID(session));
                     session.setHasModified();
                 } catch (AccessViolationException e) {
@@ -45,7 +43,7 @@ public class AdminMenu {
             case 3:
                 try {
                     Main.clearScreen();
-                    session.getSessionManager().getAccountDatabase().viewAccount(session);
+                    accountDB.viewAccount(session);
                 } catch (AccessViolationException e) {
                     System.err.println("Access violation: " + e.getMessage());
                 } catch (ExpiredSessionException e) {

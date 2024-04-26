@@ -5,7 +5,6 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 
 public class AccountDatabaseTest {
@@ -15,9 +14,20 @@ public class AccountDatabaseTest {
     
     @BeforeEach 
     public void setup() throws IOException {
-        String csvFile = getClass().getClassLoader().getResource("MOCK_DATA.csv").getFile();
-        if (csvFile == null) {
-            throw new FileNotFoundException("MOCK_DATA.csv not found in test resources");
+        ResourceLoader loader = new ResourceLoader();
+        String csvFileName = "test_only_data.csv";
+        String csvFile;
+        try {
+            csvFile = loader.getResourcePath(csvFileName);
+        } catch (IOException e) {
+            System.err.println("Error saving accounts: " + e.getMessage());
+            csvFile = null;
+        }
+        try {
+            csvFile = loader.getResourcePath(csvFileName);
+        } catch (IOException e) {
+            System.err.println("Error saving accounts: " + e.getMessage());
+            csvFile = null;
         }
         accountDB = new AccountDatabase(csvFile);
         accountDB.loadAccounts(csvFile, true);
@@ -27,7 +37,7 @@ public class AccountDatabaseTest {
         SessionManager sessionManager = new SessionManager(accountDB);
         try {
             session = sessionManager.login("admin", "password", Role.ADMIN); // Use valid credentials
-        } catch (SessionManager.InvalidCredentialsException e) {
+        } catch (InvalidCredentialsException e) {
             fail("Unexpected InvalidCredentialsException");
             System.err.println();
         }

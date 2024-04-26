@@ -1,0 +1,6 @@
+1111,goodstudent,test,STUDENT,ACTIVE
+1122,badstudent,test,STUDENT,BLOCKED,1/11/11111,FEMALE,Graduated 2019,617-111-2222
+2211,goodadvisor,test,ADVISOR,ACTIVE
+2222,badadvisor,test,ADVISOR,BLOCKED
+3333,goodadmin,test,ADMIN,ACTIVE
+4444,badadmin,test,ADMIN,BLOCKED

@@ -1,8 +1,10 @@
 package com.echo;
 
 public class StudentMenu {
+    static AccountDatabase accountDB;
 
-    public static Boolean displayStudentMenu(Session session, Boolean logout) {
+    public static Boolean displayStudentMenu(AccountDatabase accountDBIN, Session session, Boolean logout) {
+        accountDB = accountDBIN;
         System.out.println("Student Menu");
         System.out.println("1. View My Account");
         System.out.println("2. Update My Account");
@@ -14,7 +16,7 @@ public class StudentMenu {
             case 1:
                 try {
                     Main.clearScreen();
-                    session.getSessionManager().getAccountDatabase().viewAccount(session);
+                    accountDB.viewAccount(session);
                 } catch (AccessViolationException e) {
                     System.err.println("Access violation: " + e.getMessage());
                 } catch (ExpiredSessionException e) {
@@ -40,7 +42,6 @@ public class StudentMenu {
     }
 
     private static Boolean updatePrompt(Session session) {
-        AccountDatabase accountDB = session.getSessionManager().getAccountDatabase();
         StudentAccount account = (StudentAccount) session.studentAccount;
         Main.clearScreen("Update My Account");
         System.out.println("\nWhat would you like to update?");

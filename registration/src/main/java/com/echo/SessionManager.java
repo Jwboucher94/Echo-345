@@ -41,13 +41,6 @@ public class SessionManager {
         return uuidString;
     }
 
-    
-    public static class InvalidCredentialsException extends Exception {
-        public InvalidCredentialsException(String message) {
-            super(message);
-        }
-    }
-
     public Map<String, Session> getActiveSessions() {
         return new HashMap<>(activeSessions); 
     }

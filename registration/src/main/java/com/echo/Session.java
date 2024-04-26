@@ -13,7 +13,7 @@ public class Session {
     private boolean isActive;
     private boolean hasModified;
     StudentAccount studentAccount;
-
+    
     public Session(String i, Role role, Account account, SessionManager sessionManager, long expirationDuration) {
         this.sessionId = i;
         this.role = role;

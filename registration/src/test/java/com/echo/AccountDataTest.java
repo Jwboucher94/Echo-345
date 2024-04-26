@@ -28,7 +28,7 @@ public class AccountDataTest {
         SessionManager sessionManager = new SessionManager(accountDB);
         try {
             session = sessionManager.login("admin", "password", Role.ADMIN); // Use valid credentials
-        } catch (SessionManager.InvalidCredentialsException e) {
+        } catch (InvalidCredentialsException e) {
             fail("Unexpected InvalidCredentialsException");
             System.err.println();
         }

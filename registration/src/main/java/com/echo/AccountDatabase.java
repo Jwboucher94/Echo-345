@@ -10,17 +10,22 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+
 public class AccountDatabase {
-    Map<Integer, Account> accountDB = new HashMap<>();                 
+    Map<Integer, Account> accountDB = new HashMap<>();
+    ResourceLoader loader = new ResourceLoader();
+    String csvFileName;    
+    String csvFile;
+    
 
-
-    // Constructor
+    // AccountDatabase Constructor
     public AccountDatabase(String csvFile) throws IOException {                 
         if (csvFile == null) {
             throw new IllegalArgumentException("csv string cannot be null");
         }
+        this.csvFileName = csvFile;
         try {
-            accountDB = loadAccounts(csvFile, false);
+            this.accountDB = loadAccounts(csvFile, false);
         } catch (IOException e) {
             System.err.println("Error loading accounts: " + e.getMessage());
         }
@@ -38,11 +43,11 @@ public class AccountDatabase {
         if (session.getRole() != Role.ADMIN) {
             throw new AccessViolationException("Access violation: Only admin can create accounts");
         }
-        Integer userID = accountDB.size() + 1;
+        Integer userID = this.accountDB.size() + 1;
         Account account = new Account();
         account.userID = userID;
         // check if the login name already exists
-        for (Account existingAccount : accountDB.values()) {
+        for (Account existingAccount : this.accountDB.values()) {
             if (existingAccount.loginName.equals(loginName)) {
                 throw new DuplicateRecordException("Login name already exists: " + loginName);
             }
@@ -130,7 +135,7 @@ public class AccountDatabase {
         if (session.getRole() != Role.ADMIN) {
             throw new AccessViolationException("Access violation: Only admin can get student accounts");
         }
-        Account account = accountDB.get(userID);
+        Account account = this.accountDB.get(userID);
         if (account == null) {
             return null;
         }
@@ -143,7 +148,7 @@ public class AccountDatabase {
     // takes userID, loginName, password, and role as arguments and checks if the credentials are valid
     public boolean checkCredentials(Integer userID, String loginName, 
                                     String password, Role role) {        
-        Account account = accountDB.get(userID);
+        Account account = this.accountDB.get(userID);
         if (account == null || !account.loginName.equals(loginName) || 
             !account.password.equals(password) || !account.role.equals(role) || 
             account.status.equals(AccountStatus.BLOCKED)) { 
@@ -161,7 +166,7 @@ public class AccountDatabase {
             throw new ExpiredSessionException("Session is expired");
         }
         String loginName = session.getSessionOwner();
-        for (Account account : accountDB.values()) {
+        for (Account account : this.accountDB.values()) {
             if (account.loginName.equals(loginName)) {
                 System.out.println        ("         Current Users Data");
                 System.out.println        ("------------------------------------");
@@ -269,8 +274,13 @@ public class AccountDatabase {
     }
 
     // Load the accounts from a file and return a map of accounts
-    public Map<Integer, Account> loadAccounts(String csvFile, Boolean test) throws IOException { 
-        csvFile = getClass().getClassLoader().getResource("MOCK_DATA.csv").getFile();
+    public Map<Integer, Account> loadAccounts(String csvFileName, Boolean test) throws IOException {
+        try {
+            csvFile = loader.getResourcePath(csvFileName);
+        } catch (IOException e) {
+            System.err.println("Error saving accounts: " + e.getMessage());
+            csvFile = null;
+        }
         String line;
         ArrayList<Account> brokenAccounts = new ArrayList<>();
         try (BufferedReader br = new BufferedReader(new FileReader(csvFile))) {  
@@ -358,16 +368,14 @@ public class AccountDatabase {
     }
     
     // Save the accounts to a file
-    public void saveAccounts(Session session) throws AccessViolationException, ExpiredSessionException {    
-        ResourceLoader loader = new ResourceLoader();
-        String filePath;
+    public void saveAccounts(Session session) throws AccessViolationException, ExpiredSessionException {
         try {
-            filePath = loader.getResourcePath("MOCK_DATA.csv");
+            csvFile = loader.getResourcePath(csvFileName);
         } catch (IOException e) {
             System.err.println("Error saving accounts: " + e.getMessage());
-            filePath = null;
+            csvFile = null;
         }
-        try (FileWriter fw = new FileWriter(filePath);
+        try (FileWriter fw = new FileWriter(csvFile);
             BufferedWriter bw = new BufferedWriter(fw)) {
                 for (Account account : accountDB.values()) {
                     String line;
@@ -403,20 +411,12 @@ public class AccountDatabase {
 
     // Reload the accounts from the file
     public void reloadAccounts() throws IOException {  
-        String csvFile = getClass().getClassLoader().getResource("MOCK_DATA.csv").getFile(); 
+        String csvFile = getClass().getClassLoader().getResource(this.csvFileName).getFile(); 
         if (csvFile == null) {
-            throw new FileNotFoundException("MOCK_DATA.csv not found in test resources");
+            throw new FileNotFoundException(this.csvFileName + " not found in test resources");
         }
         accountDB = loadAccounts(csvFile, false); 
-    }
-
-    // Exception for account not found
-    public class DuplicateRecordException extends Exception {
-        public DuplicateRecordException(String message) {
-            super(message);
-        }
-    }
-    
+    }    
 }
 
 // Account class

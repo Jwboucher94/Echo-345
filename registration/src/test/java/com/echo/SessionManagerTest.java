@@ -64,7 +64,7 @@ class SessionManagerTest {
     }
 
     @Test
-    void testLoginMethodWithCorrectCredentials() throws SessionManager.InvalidCredentialsException {
+    void testLoginMethodWithCorrectCredentials() throws InvalidCredentialsException {
         Session session = sessionManager.login("testuser", "password", Role.STUDENT);
         assertNotNull(session, "Session should be returned for correct credentials");
         assertNotNull(sessionManager.getActiveSessions().get(session.getSessionId()), "SessionManager should have the session listed");
@@ -72,7 +72,7 @@ class SessionManagerTest {
 
     @Test
     void testLoginMethodWithIncorrectCredentials() {
-        assertThrows(SessionManager.InvalidCredentialsException.class, () -> {
+        assertThrows(InvalidCredentialsException.class, () -> {
             sessionManager.login("wronguser", "wrongpassword", Role.STUDENT);
         }, "InvalidCredentialsException should be thrown for wrong credentials");
     }
@@ -80,13 +80,13 @@ class SessionManagerTest {
     @Test
     void testLoginMethodWithBlockedAccount() {
         testAccount.setStatus(AccountStatus.BLOCKED); 
-        assertThrows(SessionManager.InvalidCredentialsException.class, () -> {
+        assertThrows(InvalidCredentialsException.class, () -> {
             sessionManager.login("testuser", "password", Role.STUDENT);
         }, "InvalidCredentialsException should be thrown for a blocked account");
     }
 
     @Test
-void testSessionListManagement() throws SessionManager.InvalidCredentialsException {
+void testSessionListManagement() throws InvalidCredentialsException {
    
     for (Session session : sessionManager.getActiveSessions().values()) {
         session.logout(false);

@@ -62,11 +62,11 @@ public class Main {
             Boolean logout = false;
             while (session.validateSession() && !logout){
                 if (loginRole == Role.ADMIN) {
-                    logout = AdminMenu.displayAdminMenu(session, logout);
+                    logout = AdminMenu.displayAdminMenu(accountDB, session, logout);
                 } else if (loginRole == Role.STUDENT) {
-                    logout = StudentMenu.displayStudentMenu(session, logout);
+                    logout = StudentMenu.displayStudentMenu(accountDB, session, logout);
                 } else if (loginRole == Role.ADVISOR) {
-                    logout = AdvisorMenu.displayTeacherMenu(session, logout);
+                    logout = AdvisorMenu.displayAdvisorMenu(accountDB, session, logout);
                 } else {
                     System.err.println("Invalid role: " + loginRole);
                 }
@@ -91,7 +91,7 @@ public class Main {
         try {
             Session session = sessionManager.login(username, password, role); // Use valid credentials
             return session;
-        } catch (SessionManager.InvalidCredentialsException e) {
+        } catch (InvalidCredentialsException e) {
             System.err.println("Invalid credentials: " + e.getMessage());
             System.out.println("Press Enter to try again or type 'q' to return to main menu");
             String input = getInput();
@@ -149,4 +149,6 @@ public class Main {
         }
         return input;
     }
+
+
 }

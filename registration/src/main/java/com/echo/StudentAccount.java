@@ -1,18 +1,7 @@
 package com.echo;
 import java.io.Serializable;
 
-class AccessViolationException extends Exception {
-    public AccessViolationException(String message) {
-        super(message);
-    }
-}
-
-class ExpiredSessionException extends Exception {
-    public ExpiredSessionException(String message) {
-        super(message);
-    }
-}
-
+// The AcademicHistory class is used to encapsulate the student's academic records.
 class AcademicHistory implements Serializable {
     private String history;
 
@@ -29,6 +18,7 @@ class AcademicHistory implements Serializable {
     }
 }
 
+// The StudentAccount class is used to encapsulate the student's account details.
 public class StudentAccount { 
     // The constructor is used to create a new StudentAccount
     // object with specified details like date of birth, gender, academic history, phone number, and login name.
@@ -120,8 +110,6 @@ public class StudentAccount {
             }
         }
     }
-
-
 
     void validateSessionForChange(Session session, boolean isChangeAllowed) throws ExpiredSessionException, AccessViolationException {
         validateSession(session); 
