@@ -5,13 +5,21 @@ import java.io.IOException;
 import java.util.Scanner;
 
 public class Main {
-    // this is not fully working yet. 
-    static Scanner scanner = new Scanner(System.in);
+    Scanner scanner;
+
+    public Main() {
+        this.scanner = new Scanner(System.in);
+    }
+    public Main(Scanner scanner) {
+        this.scanner = scanner;
+    }
     public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        Main mainObject = new Main(scanner);
         AccountDatabase accountDB;
         try {
-            accountDB = loadDatabase();
-            displayLoginMenu(accountDB);
+            accountDB = mainObject.loadDatabase();
+            mainObject.displayLoginMenu(accountDB);
         } catch (FileNotFoundException e) {
             System.err.println("Error loading database: " + e.getMessage());
         } catch (IOException e) {
@@ -19,7 +27,7 @@ public class Main {
         }
     }
 
-    static void displayLoginMenu(AccountDatabase accountDB) {
+    void displayLoginMenu(AccountDatabase accountDB) {
         SessionManager sessionManager = new SessionManager(accountDB);
         Session session = null;
         Integer counter;
@@ -35,7 +43,7 @@ public class Main {
                 counter++;
             }
             System.out.println(counter++ +". Exit");
-            Integer input = getMenuInput(counter - 1);
+            Integer input = this.getMenuInput(counter - 1);
             if (input == counter - 1) {
                 System.out.println("Exiting...");
                 System.exit(0);
@@ -63,11 +71,11 @@ public class Main {
             try {
                 while (session.validateSession() && !logout){
                     if (loginRole == Role.ADMIN) {
-                        logout = AdminMenu.displayAdminMenu(accountDB, session, logout);
+                        logout = AdminMenu.displayAdminMenu(this, accountDB, session, logout);
                     } else if (loginRole == Role.STUDENT) {
-                        logout = StudentMenu.displayStudentMenu(accountDB, session, logout);
+                        logout = StudentMenu.displayStudentMenu(this, accountDB, session, logout);
                     } else if (loginRole == Role.ADVISOR) {
-                        logout = AdvisorMenu.displayAdvisorMenu(accountDB, session, logout);
+                        logout = AdvisorMenu.displayAdvisorMenu(this, accountDB, session, logout);
                     } else {
                         System.err.println("Invalid role: " + loginRole);
                     }
@@ -84,7 +92,7 @@ public class Main {
         }
     }
 
-    static Session getSession (SessionManager sessionManager, Role role) {
+    Session getSession (SessionManager sessionManager, Role role) {
         clearScreen();
         System.out.println("You have selected " + role + " role.");
         System.out.println("Please enter your username:");
@@ -105,17 +113,17 @@ public class Main {
         }
     }
 
-    static AccountDatabase loadDatabase() throws FileNotFoundException, IOException {
+    AccountDatabase loadDatabase() throws FileNotFoundException, IOException {
         String csvFile = "MOCK_DATA.csv"; // "MOCK_DATA.csv" is the file name
         try {
-            AccountDatabase accountDB = new AccountDatabase(csvFile);
+            AccountDatabase accountDB = new AccountDatabase(this, csvFile);
             return accountDB;
         } catch (IOException e) {
             throw new IOException("Error loading account database: " + e.getMessage());
         }
     }
 
-    public static void clearScreen(String title) {
+    public void clearScreen(String title) {
         System.out.println("\n".repeat(50));
         int titleLength = title.length();
         int dashLength = 0;
@@ -129,19 +137,25 @@ public class Main {
         System.out.println("\n".repeat(50));
     }
 
-    public static String getInput() {
+    public String getInput() {
+        return getInput(this.scanner);
+    }
+    public String getInput(Scanner scanner) {
         System.out.print("> ");
         return scanner.nextLine();
     }
 
-    static Integer getMenuInput(Integer validOptions) {
+    Integer getMenuInput(Integer validOptions) {
+        return getMenuInput(this.scanner, validOptions);
+    }
+    Integer getMenuInput(Scanner scanner, Integer validOptions) {
         Integer input = 0;
         while (input == 0) {
             try {
                 System.out.print("> ");
-                char firstint = scanner.next().charAt(0);
+                String firstint = scanner.next();
                 scanner.nextLine();
-                input = Character.getNumericValue(firstint);
+                input = Integer.valueOf(firstint);
             } catch (Exception e) {
                 System.out.println("Invalid input. Please enter a number.");
             }

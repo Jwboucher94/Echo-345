@@ -1,19 +1,23 @@
 package com.echo;
 
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test; 
+import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.IOException;
+import java.util.Scanner;
 
 public class AccountDatabaseTest {
+    Scanner mockScanner = Mockito.mock(Scanner.class);
+    Main mainObject = new Main(mockScanner);
     private Session session;
     AccountDatabase accountDB;
     @BeforeEach 
     public void setup() throws IOException {
         try {
-            accountDB = new AccountDatabase("test_only_data.csv");
+            accountDB = new AccountDatabase(mainObject, "test_only_data.csv");
         } catch (IOException e) {
             System.err.println("Error reading file");
         }

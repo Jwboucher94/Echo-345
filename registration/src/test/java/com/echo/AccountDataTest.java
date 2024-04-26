@@ -1,19 +1,24 @@
 package com.echo;
 
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test; 
+import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.opentest4j.AssertionFailedError;
 import static org.junit.jupiter.api.Assertions.*;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Scanner;
 
 
 public class AccountDataTest {
+    Scanner mockScanner = Mockito.mock(Scanner.class);
+    Main mainObject = new Main(mockScanner);
     private Session session;
     AccountDatabase accountDB;
     @BeforeEach 
     public void setup() throws IOException {
         try {
-            accountDB = new AccountDatabase("test_only_data.csv");
+            accountDB = new AccountDatabase(mainObject, "test_only_data.csv");
         } catch (IOException e) {
             System.err.println("Error reading file");
         }
@@ -69,5 +74,19 @@ public class AccountDataTest {
         } catch (AccessViolationException | ExpiredSessionException e) {
             fail("Unexpected exception: "+ e.getMessage());
         }
+    }
+
+    @Test
+    public void testDataInput() {
+        Scanner mockScanner = Mockito.mock(Scanner.class);
+        Mockito.when(mockScanner.nextLine())
+               .thenReturn("02/03/1234");
+        Mockito.when(mockScanner.next())
+               .thenReturn("1");
+        Mockito.when(mockScanner.nextLine())
+               .thenReturn("617-222-2212");
+        ArrayList<Object> studentData = accountDB.studentDataInput(mockScanner);
+        System.out.println(studentData);
+        assertNotNull(studentData);
     }
 }

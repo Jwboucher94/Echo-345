@@ -1,10 +1,12 @@
 package com.echo;
 
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.AfterEach;
 import static org.junit.jupiter.api.Assertions.*;
 import java.io.IOException;
+import java.util.Scanner;
 
 class SessionManagerTest {
     private AccountDatabase accountDatabase;
@@ -13,11 +15,11 @@ class SessionManagerTest {
     private SessionManager sessionManager;
 
     @BeforeEach 
-    
     public void setup() throws IOException {
-        
+        Scanner mockScanner = Mockito.mock(Scanner.class);
+        Main mainObject = new Main(mockScanner);
         try {
-            accountDatabase = new AccountDatabase("test_only_data.csv");
+            accountDatabase = new AccountDatabase(mainObject,"test_only_data.csv");
         } catch (IOException e) {
             System.err.println("Error reading file");
         }

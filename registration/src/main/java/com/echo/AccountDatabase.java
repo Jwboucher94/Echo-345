@@ -8,10 +8,12 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Scanner;
 
 
 
 public class AccountDatabase {
+    Main main;
     Map<Integer, Account> accountDB = new HashMap<>();
     ResourceLoader loader = new ResourceLoader();
     String csvFileName;    
@@ -19,7 +21,8 @@ public class AccountDatabase {
     
 
     // AccountDatabase Constructor
-    public AccountDatabase(String csvFileName) throws IOException {                 
+    public AccountDatabase(Main mainIN, String csvFileName) throws IOException {    
+        main = mainIN;             
         if (csvFileName == null) {
             throw new IllegalArgumentException("csv string cannot be null");
         }
@@ -71,11 +74,14 @@ public class AccountDatabase {
 
     // input student data
     ArrayList<Object> studentDataInput() {
+        return studentDataInput(main.scanner);
+    }
+    ArrayList<Object> studentDataInput(Scanner scanner) {
         ArrayList<Object> studentData = new ArrayList<>();
         System.out.println("Enter Date of Birth (MM/DD/YYYY): ");
-        String dob = Main.getInput();
+        String dob = main.getInput(scanner);
         System.out.println("Choose a gender: 1. Male, 2. Female, 3. Other");
-        Integer genderChoice = Main.getMenuInput(3);
+        Integer genderChoice = main.getMenuInput(scanner, 3);
         Gender gender;
         switch (genderChoice) {
             case 1:
@@ -92,7 +98,7 @@ public class AccountDatabase {
         }
         String academicHistory = "";
         System.out.println("Enter phone number: ");
-        String phoneNumber = Main.getInput();
+        String phoneNumber = main.getInput(scanner);
         studentData.add(dob);
         studentData.add(gender);
         studentData.add(academicHistory);
@@ -106,8 +112,8 @@ public class AccountDatabase {
         String phoneNumber;
         boolean test = false;
         while (!test) {
-            Main.clearScreen("Enter new phone number:");
-            phoneNumber = Main.getInput();
+            main.clearScreen("Enter new phone number:");
+            phoneNumber = main.getInput();
             test = phoneNumber.matches("^(1-)?\\d{3}-\\d{3}-\\d{4}$");
             if (test) {
                 try {
@@ -227,7 +233,7 @@ public class AccountDatabase {
         while (!passwordCheck(session, password)) {
             passwordCheckInstruction();
             System.out.println("Enter a new password: ");
-            password = Main.getInput();
+            password = main.getInput();
         }
         if (passwordCheck(session, password)) {
             session.getAccount().password = password;
@@ -312,7 +318,7 @@ public class AccountDatabase {
                                 input = "n";
                             } else {
                                 // System.out.println("Test mode: N");
-                                input = Main.getInput();
+                                input = main.getInput();
                             }
 
                             if (input.toLowerCase().equals("y")) {
@@ -346,13 +352,13 @@ public class AccountDatabase {
         SessionManager sessionManager = new SessionManager(this);
         System.out.println("In order to modify, we need to login as an admin.\n"+
                            "Press enter to continue, or q to quit.");
-        String input = Main.getInput();
+        String input = main.getInput();
         if (input.toLowerCase().startsWith("q")) {
             System.exit(0);
         }
         Session session = null;
         while (session == null) {
-            session = Main.getSession(sessionManager, Role.ADMIN);
+            session = main.getSession(sessionManager, Role.ADMIN);
         }
         // Iterate for any broken student accounts     
         for (Account account : brokenAccounts) {

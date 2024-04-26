@@ -4,14 +4,14 @@ import java.util.Map;
 
 public class AdvisorMenu {
 
-    public static Boolean displayAdvisorMenu(AccountDatabase accountDB, Session session, Boolean logout) {
-        Main.clearScreen("Welcome to the Advisor Menu");
+    public static Boolean displayAdvisorMenu(Main main, AccountDatabase accountDB, Session session, Boolean logout) {
+        main.clearScreen("Welcome to the Advisor Menu");
         System.out.println("1. View all students");
         System.out.println("2. View all courses");
         System.out.println("3. View all courses for a student");
         System.out.println("4. Logout");
         System.out.println("5. Exit");
-        Integer input = Main.getMenuInput(4);
+        Integer input = main.getMenuInput(4);
 
         switch (input) {
             case 1:

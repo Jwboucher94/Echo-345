@@ -3,6 +3,7 @@ package com.echo;
 import java.io.IOException;
 
 class ManualTest {
+    static Main mainObject = new Main();
     static Session session;
     static AccountDatabase accountDatabase;
     static SessionManager sessionManager;
@@ -109,7 +110,7 @@ class ManualTest {
     }
 
     static void init() throws IOException {
-        AccountDatabase accountDatabase = new AccountDatabase("test_only_data.csv");
+        AccountDatabase accountDatabase = new AccountDatabase(mainObject, "test_only_data.csv");
         SessionManager sessionManager = new SessionManager(accountDatabase);
         Account testAccount = new Account(1, "goodadmin", "test", Role.ADMIN, AccountStatus.ACTIVE);
         session = new Session("15", Role.ADMIN, testAccount, sessionManager, SessionManager.timeInteger);

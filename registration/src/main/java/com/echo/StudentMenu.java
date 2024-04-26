@@ -2,23 +2,25 @@ package com.echo;
 
 public class StudentMenu {
     static AccountDatabase accountDB;
+    static Main main;
 
-    public static Boolean displayStudentMenu(AccountDatabase accountDBIN, Session session, Boolean logout) {
+    public static Boolean displayStudentMenu(Main mainObject, AccountDatabase accountDBIN, Session session, Boolean logout) {
+        main = mainObject;
         accountDB = accountDBIN;
-        Main.clearScreen("Student Menu");
+        main.clearScreen("Student Menu");
         System.out.println("1. View My Account");
         System.out.println("2. Update My Account");
         System.out.println("3. Save and Logout");
         System.out.println("4. Exit without saving");
 
-        Integer input = Main.getMenuInput(4);
+        Integer input = main.getMenuInput(4);
         switch (input) {
             case 1:
                 try {
                     Main.clearScreen();
                     accountDB.viewAccount(session);
                     System.out.println("\nPress enter to continue...");
-                    Main.getInput();
+                    main.getInput();
                 } catch (AccessViolationException e) {
                     System.err.println("Access violation: " + e.getMessage());
                 } catch (ExpiredSessionException e) {
@@ -45,23 +47,23 @@ public class StudentMenu {
 
     private static Boolean updatePrompt(Session session) {
         StudentAccount account = (StudentAccount) session.studentAccount;
-        Main.clearScreen("Update My Account");
+        main.clearScreen("Update My Account");
         System.out.println("\nWhat would you like to update?");
         System.out.println("1. Gender");
         System.out.println("2. Password");
         System.out.println("3. Phone Number");
 
-        Integer input = Main.getMenuInput(3);
+        Integer input = main.getMenuInput(3);
         switch (input) {
             case 1:
                 // choosing to edit the student's Gender
-                Main.clearScreen("Chose your preferred gender:\n");
+                main.clearScreen("Chose your preferred gender:\n");
                 Integer counter = 1;
                 for (Gender gender : Gender.values()) {
                     System.out.println(counter + ". " + gender);
                     counter++;
                 }
-                input = Main.getMenuInput(counter - 1);
+                input = main.getMenuInput(counter - 1);
                 Gender gender = null;
                 while (gender == null) {
                     try {
@@ -78,8 +80,8 @@ public class StudentMenu {
                 session.setHasModified();
                 return true;
             case 2:
-                Main.clearScreen("Enter new password:");
-                String password = Main.getInput();
+                main.clearScreen("Enter new password:");
+                String password = main.getInput();
                 accountDB.changePassword(session, password);
                 return true;
             case 3:

@@ -1,23 +1,23 @@
 package com.echo;
 
 public class AdminMenu {
-    public static boolean displayAdminMenu(AccountDatabase accountDB, Session session, Boolean logout) throws AccessViolationException, ExpiredSessionException {
+    public static boolean displayAdminMenu(Main main, AccountDatabase accountDB, Session session, Boolean logout) throws AccessViolationException, ExpiredSessionException {
         Integer input;
         while (!logout) {
-            Main.clearScreen("Admin Menu");
+            main.clearScreen("Admin Menu");
             System.out.println("1. Create Account");
             System.out.println("2. Manage Student Account Access");
             System.out.println("3. View My Account");
             System.out.println("4. Save and Logout");
             System.out.println("5. Exit without saving");
-            input = Main.getMenuInput(5);
+            input = main.getMenuInput(5);
             switch (input) { // Main Admin Menu Switch
                 case 1: //  Create Student
-                    Main.clearScreen("Create New Student Account");
+                    main.clearScreen("Create New Student Account");
                     System.out.println("Enter login name:");
-                    String loginName = Main.getInput();
+                    String loginName = main.getInput();
                     System.out.println("Enter password:");
-                    String password = Main.getInput();
+                    String password = main.getInput();
                     try {
                         StudentAccount studentAccount = accountDB.createAccount(session, loginName, password);
                         System.out.println("Account created successfully. User ID: " + studentAccount.getUserID(session));
@@ -35,16 +35,16 @@ public class AdminMenu {
                     }
                     break;
                 case 2: // Manage Students
-                    Main.clearScreen("Student Account Management");
+                    main.clearScreen("Student Account Management");
                     System.out.println("Enter the Login Name of the student account you want to manage:");
-                    String studentloginName = Main.getInput();
+                    String studentloginName = main.getInput();
                     try {
-                        displayStudentMenu(accountDB, session, studentloginName);
+                        displayStudentMGMTMenu(main, accountDB, session, studentloginName);
                         break;
                     } catch (AccountNotFoundException e) {
                         System.err.println("Account not found: " + e.getMessage());
                         System.out.println("Try again? (y/n)");
-                        String choice = Main.getInput();
+                        String choice = main.getInput();
                         if (!choice.startsWith("y")) {
                             break;
                         }
@@ -73,46 +73,46 @@ public class AdminMenu {
         return logout;
     }
 
-    public static Boolean displayStudentMenu(AccountDatabase accountDB, Session session, String studentLoginName) throws AccessViolationException, ExpiredSessionException, AccountNotFoundException {
+    public static Boolean displayStudentMGMTMenu(Main main, AccountDatabase accountDB, Session session, String studentLoginName) throws AccessViolationException, ExpiredSessionException, AccountNotFoundException {
         Boolean thisStudent = true;
         // Find the Account
         for (Account account : accountDB.accountDB.values()) {
             while (account.getLoginName().equals(studentLoginName) && account.role == Role.STUDENT && thisStudent) {
-                Main.clearScreen("Student Account Management");
+                main.clearScreen("Student Account Management");
                 System.out.println("Chosen student: " + studentLoginName);
                 System.out.println("1. View Account");
                 System.out.println("2. Enable Account");
                 System.out.println("3. Disable Account");
                 System.out.println("4. Back");
                 System.out.println("5. Exit without saving");
-                Integer input = Main.getMenuInput(5);
+                Integer input = main.getMenuInput(5);
                 switch (input) { // Main Student Management Switch
                     case 1: //    View Account
                         Main.clearScreen();
                         accountDB.viewAccount(session, studentLoginName);
                         System.out.println("Press enter to continue...");
-                        Main.getInput();
+                        main.getInput();
                         break;
                     case 2: //  Enable Account
                         System.err.println("Are you sure you want to enable this account? (y/n)");
-                        if (Main.getInput().startsWith("y")) {
+                        if (main.getInput().startsWith("y")) {
                             accountDB.unblock(session, account.userID);
                             System.out.println("Account enabled.");
                             session.setHasModified();
                             System.out.println("Press enter to continue...");
-                            Main.getInput();
+                            main.getInput();
                             break;
                         }
                         System.out.println("Account not enabled.");
                         break;
                     case 3: // Disable Account
                         System.err.println("Are you sure you want to disable this account? (y/n)");
-                        if (Main.getInput().startsWith("y")) {
+                        if (main.getInput().startsWith("y")) {
                             accountDB.block(session, account.userID);
                             System.out.println("Account disabled.");
                             session.setHasModified();
                             System.out.println("Press enter to continue...");
-                            Main.getInput();
+                            main.getInput();
                             break;
                         }
                         System.out.println("Account not disabled.");
