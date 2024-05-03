@@ -9,7 +9,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Scanner;
 
-
 public class AccountDataTest {
     Scanner mockScanner = Mockito.mock(Scanner.class);
     Main mainObject = new Main(mockScanner);

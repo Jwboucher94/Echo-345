@@ -8,9 +8,10 @@ public class AdminMenu {
             System.out.println("1. Create Account");
             System.out.println("2. Manage Student Account Access");
             System.out.println("3. View My Account");
-            System.out.println("4. Save and Logout");
-            System.out.println("5. Exit without saving");
-            input = main.getMenuInput(5);
+            System.out.println("4. Run testing");
+            System.out.println("5. Save and Logout");
+            System.out.println("6. Exit without saving");
+            input = main.getMenuInput(6);
             switch (input) { // Main Admin Menu Switch
                 case 1: //  Create Student
                     main.clearScreen("Create New Student Account");
@@ -61,11 +62,17 @@ public class AdminMenu {
                         return true;
                     }
                     break;
-                case 4: //  Return to Main
+                case 4:
+                    System.out.println("Running tests...");
+                    ManualTest.manualTest();
+                    System.out.println("Press Enter to continue");
+                    main.getInput();
+                    break;
+                case 5: //  Return to Main
                     System.out.println("Logging out...");
                     logout = true;
                     break;
-                case 5: // Exit W/o Saving
+                case 6: // Exit W/o Saving
                     System.out.println("Exiting without saving...");
                     System.exit(0);
             }
