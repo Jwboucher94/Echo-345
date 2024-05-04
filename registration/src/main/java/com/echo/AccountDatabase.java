@@ -21,7 +21,11 @@ public class AccountDatabase {
     
 
     // AccountDatabase Constructor
-    public AccountDatabase(Main mainIN, String csvFileName) throws IOException {    
+    public AccountDatabase(Main mainIN, String csvFileName) throws IOException {
+        this(mainIN, csvFileName, false);
+    }
+    // AccountDatabase Constructor, with settable test variable
+    public AccountDatabase(Main mainIN, String csvFileName, Boolean test) throws IOException {    
         main = mainIN;             
         if (csvFileName == null) {
             throw new IllegalArgumentException("csv string cannot be null");
@@ -29,15 +33,18 @@ public class AccountDatabase {
         this.csvFileName = csvFileName;
         this.csvFilePath = this.loader.getResourcePath(csvFileName);
         try {
-            this.accountDB = loadAccounts(csvFileName, false);
+            this.accountDB = loadAccounts(csvFileName, test);
         } catch (IOException e) {
-            System.err.println("Error loading accounts: " + e.getMessage());
+            throw new IOException("Error loading accounts from file: " + e.getMessage());
         }
     }
 
+    StudentAccount createAccount(Session session, String loginName, String password) throws AccessViolationException, ExpiredSessionException, DuplicateRecordException {
+        return createAccount(session, loginName, password, null);
+    }
     // Create a new account - Requires Role.ADMIN
     StudentAccount createAccount(Session session, String loginName,
-    String password) throws AccessViolationException, ExpiredSessionException, DuplicateRecordException {
+    String password, StudentData studentData) throws AccessViolationException, ExpiredSessionException, DuplicateRecordException {
         if (session == null) {
             throw new AccessViolationException("Session is null");
         }
@@ -60,12 +67,14 @@ public class AccountDatabase {
         account.password = password;
         account.role = Role.STUDENT;
         account.status = AccountStatus.ACTIVE;
-        ArrayList<Object> studentData = studentDataInput();
-        StudentAccount student = new StudentAccount((String) studentData.get(0), 
-                                                    (Gender) studentData.get(1),
-                                                    (String) studentData.get(2), 
-                                                    (String) studentData.get(3), 
-                                                    account.userID            );
+        if (studentData == null) {
+            studentData = studentDataInput();
+        }
+        StudentAccount student = new StudentAccount((String) studentData.getDob(), 
+                                                    (Gender) studentData.getGender(),
+                                                    (String) studentData.getPhoneNumber(), 
+                                                    (String) studentData.getAcademicHistory(), 
+                                                    account.userID);
         account.setStudentAccount(student);
         accountDB.put(userID, account);
         session.setHasModified();
@@ -73,13 +82,22 @@ public class AccountDatabase {
     }
 
     // input student data
-    ArrayList<Object> studentDataInput() {
+    StudentData studentDataInput() {
         return studentDataInput(main.scanner);
     }
-    ArrayList<Object> studentDataInput(Scanner scanner) {
-        ArrayList<Object> studentData = new ArrayList<>();
+    StudentData studentDataInput(Scanner scanner) {
         System.out.println("Enter Date of Birth (MM/DD/YYYY): ");
-        String dob = main.getInput(scanner);
+        Boolean correct = false;
+        String dob = "";
+        while (correct == false) {
+            dob = main.getInput(scanner);
+            System.out.println(dob);
+            correct = dob.matches("^(0[1-9]|1[0-2])/(0[1-9]|[12][0-9]|3[01])/[0-9]{4}$");
+            if (correct == false) {
+                System.out.println("Invalid date format. Please enter a valid date in MM/DD/YYYY format.");
+                System.exit(1);
+            }
+        }
         System.out.println("Choose a gender: 1. Male, 2. Female, 3. Other");
         Integer genderChoice = main.getMenuInput(scanner, 3);
         Gender gender;
@@ -96,13 +114,17 @@ public class AccountDatabase {
             default:
                 gender = Gender.OTHER;
         }
-        String academicHistory = "";
-        System.out.println("Enter phone number: ");
-        String phoneNumber = main.getInput(scanner);
-        studentData.add(dob);
-        studentData.add(gender);
-        studentData.add(academicHistory);
-        studentData.add(phoneNumber);
+        correct = false;
+        String phoneNumber = "";
+        while (correct == false) {
+            System.out.println("Enter phone number: ");
+            phoneNumber = main.getInput(scanner);
+            correct = phoneNumber.matches("^\\d{3}-\\d{3}-\\d{4}$");
+            if (correct == false) {
+                System.out.println("Invalid phone number format. Please enter a valid phone number in XXX-XXX-XXXX format.");
+            }
+        }
+        StudentData studentData = new StudentData(dob, gender, "", phoneNumber);
         return studentData;
     }
 
@@ -167,6 +189,9 @@ public class AccountDatabase {
     // view the current user's account
 
     void viewAccount(Session session) throws AccessViolationException, ExpiredSessionException {
+        if (session == null) {
+            throw new AccessViolationException("Session is null");
+        }
         String loginName = session.getSessionOwner();
         viewAccount(session, loginName);
     }
@@ -178,8 +203,12 @@ public class AccountDatabase {
         if (session.isActive() == false) {
             throw new ExpiredSessionException("Session is expired");
         }
+        Integer size = this.accountDB.size();
+        Boolean found = false;
         for (Account account : this.accountDB.values()) {
+            size --;
             if (account.loginName.equals(loginName)) {
+                found = true;
                 System.out.println        ("         "+ loginName+"'s Data");
                 System.out.println        ("------------------------------------");
                 System.out.println        ("      Account ID: " + account.userID);
@@ -201,6 +230,9 @@ public class AccountDatabase {
                 }
                 System.out.println        ("------------------------------------");
             }
+        }
+        if (found == false) {
+            throw new AccessViolationException("Account not found");
         }
         
     }
@@ -301,7 +333,12 @@ public class AccountDatabase {
             while ((line = br.readLine()) != null) {
                 String[] fields = line.split(",");
                 if (fields.length >= 5) {
-                    Account account = new Account(Integer.parseInt(fields[0]), fields[1], fields[2], Role.valueOf(fields[3]), AccountStatus.valueOf(fields[4]));
+                    Account account;
+                    try {
+                        account = new Account(Integer.parseInt(fields[0]), fields[1], fields[2], Role.valueOf(fields[3]), AccountStatus.valueOf(fields[4]));
+                    } catch (ArrayIndexOutOfBoundsException | IllegalArgumentException e) {
+                        throw new IOException(e.getMessage());
+                    }
                     // If the account is a student account, create a student account object for them
                     if (account.role == Role.STUDENT) {
                         try {
@@ -314,10 +351,8 @@ public class AccountDatabase {
                             System.out.println("Would you like to create a student account for this user? (Y/N)");
                             String input;
                             if (test == true) {
-                                // System.out.println("Test mode: Y");
                                 input = "n";
                             } else {
-                                // System.out.println("Test mode: N");
                                 input = main.getInput();
                             }
 
@@ -331,6 +366,8 @@ public class AccountDatabase {
                     if (!accountDB.containsKey(account.userID)) {
                         accountDB.put(account.userID, account);
                     }
+                } else {
+                    throw new IOException("Invalid account data format. Please ensure the file is in the correct format.");
                 }
             }
             br.close();
@@ -339,8 +376,7 @@ public class AccountDatabase {
                 accountDB = missingStudentAccount(brokenAccounts, accountDB);
             }
         } catch (IOException e) {
-            System.err.println("Error loading accounts: " + e.getMessage());
-            System.exit(1);
+            throw new IOException(e.getMessage());
         } 
         return accountDB;
     }
@@ -362,12 +398,12 @@ public class AccountDatabase {
         }
         // Iterate for any broken student accounts     
         for (Account account : brokenAccounts) {
-            ArrayList<Object> studentData = studentDataInput();
-            StudentAccount student = new StudentAccount((String) studentData.get(0), 
-                                                        (Gender) studentData.get(1),
-                                                        (String) studentData.get(2), 
-                                                        (String) studentData.get(3), 
-                                                        account.userID            );
+            StudentData studentData = studentDataInput();
+            StudentAccount student = new StudentAccount((String) studentData.getDob(), 
+                                                        (Gender) studentData.getGender(),
+                                                        (String) studentData.getPhoneNumber(), 
+                                                        (String) studentData.getAcademicHistory(), 
+                                                        account.userID);
             // set student account and add the account back to the accountDB
             account.setStudentAccount(student);
             accountDB.put(account.userID, account);
@@ -485,6 +521,37 @@ class Account {
         this.status = status;
     }
 }
+
+class StudentData {
+    Gender gender;
+    String dob;
+    String phoneNumber;
+    String academicHistory;
+
+    public StudentData(String dob, Gender gender, String academicHistory, String phoneNumber) {
+        this.dob = dob;
+        this.gender = gender;
+        this.phoneNumber = phoneNumber;
+        this.academicHistory = academicHistory;
+    }
+
+    public Gender getGender() {
+        return gender;
+    }
+
+    public String getDob() {
+        return dob;
+    }
+
+    public String getPhoneNumber() {
+        return phoneNumber;
+    }
+
+    public String getAcademicHistory() {
+        return academicHistory;
+    }
+}
+
 
 // Roles for the account
 enum Role {  

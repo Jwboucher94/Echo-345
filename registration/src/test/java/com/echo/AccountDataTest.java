@@ -6,7 +6,6 @@ import org.mockito.Mockito;
 import org.opentest4j.AssertionFailedError;
 import static org.junit.jupiter.api.Assertions.*;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Scanner;
 
 public class AccountDataTest {
@@ -84,8 +83,7 @@ public class AccountDataTest {
                .thenReturn("1");
         Mockito.when(mockScanner.nextLine())
                .thenReturn("617-222-2212");
-        ArrayList<Object> studentData = accountDB.studentDataInput(mockScanner);
-        System.out.println(studentData);
+        StudentData studentData = accountDB.studentDataInput(mockScanner);
         assertNotNull(studentData);
     }
 }
