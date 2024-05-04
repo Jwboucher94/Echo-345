@@ -238,16 +238,16 @@ public class AccountDatabase {
     }
  
     // check if the password meets the requirements
-    boolean passwordCheck(Session session, String password) {
+    boolean passwordCheck(Session session, String password) throws IOException {
         boolean test = password.matches("^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$ %^&*-]).{8,}$");
         if (test == true) {
             if (!password.matches(session.getAccount().password)) {
             return true;
             } else {
-                System.err.println("Password cannot be the same as the current password.");
+                throw new IOException("Password cannot be the same as the current password.");
             }
         }
-        return false;
+        throw new IOException("Password does not meet the requirements.");
     }
 
     // display password check instructions
@@ -262,12 +262,18 @@ public class AccountDatabase {
 
     // change the password
     boolean changePassword(Session session, String password) {
-        while (!passwordCheck(session, password)) {
-            passwordCheckInstruction();
-            System.out.println("Enter a new password: ");
-            password = main.getInput();
+        Boolean test = false;
+        while (!test) {
+            try {
+                passwordCheckInstruction();
+                System.out.println("Enter a new password: ");
+                password = main.getInput();
+                test = passwordCheck(session, password);
+            } catch (IOException e) {
+                System.err.println("Password does not meet the requirements.");
+            }
         }
-        if (passwordCheck(session, password)) {
+        if (test) {
             session.getAccount().password = password;
             session.setHasModified();
             session.logout(true);

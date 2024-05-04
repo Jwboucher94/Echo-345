@@ -47,7 +47,6 @@ public class AdvisorMenu {
 
     // TODO: Implement viewAllCoursesForStudent for the Advisor Menu
     private static void viewAllCoursesForStudent(Map<Integer, Account> accountDB) {
-        // TODO Auto-generated method stub
         System.err.println("Unimplemented method 'viewAllCoursesForStudent'");
     }
 

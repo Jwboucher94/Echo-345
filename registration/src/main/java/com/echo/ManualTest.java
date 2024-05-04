@@ -4,10 +4,10 @@ import java.io.IOException;
 
 public class ManualTest {
     static Main mainObject = new Main();
-    static Session session;
+    static Session testSession;
     static AccountDatabase accountTestDB;
     static Account testAccount;
-    static SessionManager sessionManager;
+    static SessionManager sessionTestManager;
     static Boolean success = false;
     
     static void manualTest() {
@@ -98,6 +98,7 @@ public class ManualTest {
         Boolean result = true;
         switch (AccountTestList.values()[testchoice]) {
             case CreateStudent:
+            // Tests on Student creation
                 try {
                     accountTestDB = new AccountDatabase(mainObject, "test_only_data.csv", true);
                 } catch (IOException e) {
@@ -106,9 +107,9 @@ public class ManualTest {
                 }
                 StudentData studentData = new StudentData("01/02/1001", Gender.MALE, "", "123-123-1123");
                 try {
-                    StudentAccount studentAccount = accountTestDB.createAccount(session, "tester", "tester", studentData);
-                    System.out.println("Account created successfully. User ID: " + studentAccount.getUserID(session));
-                    session.setHasModified();
+                    StudentAccount studentAccount = accountTestDB.createAccount(testSession, "tester", "tester", studentData);
+                    System.out.println("Account created successfully. User ID: " + studentAccount.getUserID(testSession));
+                    testSession.setHasModified();
                 } catch (AccessViolationException e) {
                     System.err.println("Access Violation: " + e.getMessage() + "\n");
                     return false;
@@ -120,15 +121,27 @@ public class ManualTest {
                     return false;
                 }
                 try {
-                    accountTestDB.createAccount(session, "tester", "tester", studentData);
+                    accountTestDB.createAccount(testSession, "tester", "tester", studentData);
                     System.err.println("Error: Duplicate Record created." + "\n");
+                    return false;
+                } catch (AccessViolationException | ExpiredSessionException | DuplicateRecordException e) {
+                    // Expected
+                }
+                try {
+                    // Non-admin creation test
+                    Account account = new Account(1, "tester", "tester", Role.STUDENT, AccountStatus.ACTIVE);
+                    Session badsession = new Session("id", Role.STUDENT, account, sessionTestManager, 99999);
+                    accountTestDB.createAccount(badsession, "shouldnt", "work", studentData);
+                    System.err.println("Error: Account created without admin permissions.");
                     return false;
                 } catch (AccessViolationException | ExpiredSessionException | DuplicateRecordException e) {
                     // Expected
                 }
                 System.out.println();
                 return true;
+
             case AccountDatabaseConstructor:
+            // Tests on the Account Database Constructor
                 System.out.println("This will test the AccountDatabase constructor, as well as the loadAccount method.");
                 try {
                     System.out.println("Testing working CSV file");
@@ -155,12 +168,14 @@ public class ManualTest {
                 }
                 System.out.println();
                 return true;
-            case viewAccountTest:
+
+            case ViewAccountTest:
+            // Tests on the viewAccount method
                 try {
                     System.out.println("\nTesting current test session's account name:");
-                    accountTestDB.viewAccount(session);
+                    accountTestDB.viewAccount(testSession);
                     System.out.println("Testing valid secondary account view");
-                    accountTestDB.viewAccount(session, "goodstudent");
+                    accountTestDB.viewAccount(testSession, "goodstudent");
                 } catch (AccessViolationException | ExpiredSessionException e) {
                     System.err.println("Error: " + e.getMessage() + "\n");
                     return false;
@@ -168,7 +183,7 @@ public class ManualTest {
                 try {
                     System.out.println("Testing invalid account name");
                     String testAccountName = "testers";
-                    accountTestDB.viewAccount(session, testAccountName);
+                    accountTestDB.viewAccount(testSession, testAccountName);
                     System.err.println("Error: Exception was not caught.\n");
                     return false;
                 } catch (AccessViolationException | ExpiredSessionException e) {
@@ -177,13 +192,13 @@ public class ManualTest {
                 try {
                     // test student account with missing data
                     System.out.println("Testing student account with missing data");
-                    accountTestDB.viewAccount(session, "brokenstudent");
+                    accountTestDB.viewAccount(testSession, "brokenstudent");
                 } catch (AccessViolationException | ExpiredSessionException e) {
                     // Expected
                 }
                 try {
                     System.out.println("Testing nonexistent login name");
-                    accountTestDB.viewAccount(session, null);
+                    accountTestDB.viewAccount(testSession, null);
                     // very unexpected to finish
                     System.out.println("loginName is null, but view passed?");
                     return false;
@@ -201,53 +216,80 @@ public class ManualTest {
                 }
                 System.out.println();
                 return true;
-            case Delete:
-                break;
+
+            case passwordCheck:
+            // Tests on the passwordCheck method
+                System.out.println("Checking if the Instructions print without issue.\n-----");
+                accountTestDB.passwordCheckInstruction();
+                Account passwordChecktestAccount = new Account(123, "goodadmin", "!m123Password", Role.ADMIN, AccountStatus.ACTIVE);
+                Session passwordCheckTestSession = new Session("213", Role.ADMIN, passwordChecktestAccount, sessionTestManager, SessionManager.timeInteger);
+                try {
+                    System.out.println("-----\nTesting invalid password");
+                    accountTestDB.passwordCheck(passwordCheckTestSession, "badpassword");
+                    System.err.println("Error: Exception was not caught.\n");
+                    return false;
+                } catch (IOException e) {
+                    // Expected
+                }
+                try {
+                    System.out.println("Testing valid, but original, password");
+                    accountTestDB.passwordCheck(passwordCheckTestSession, "!m123Password");
+                    System.err.println("Error: Exception was not caught.\n");
+                } catch (IOException e) {
+                    // Expected
+                }
+                try {
+                    System.out.println("Testing valid new password");
+                    accountTestDB.passwordCheck(passwordCheckTestSession, "1234!123Pass");
+                } catch (IOException e) {
+                    return false;
+                }
+                System.out.println();
+                return true;
+            // NOTE: Do we need more cases for Account testing?
+            
             case Exit:
                 break;
-            case Update:
-                break;
         }
-        
-        // TODO:
         return result;
     }
-
+    // TODO: Following test menus are TBD.
     static Boolean testSessions(Integer testChoice) {
         Boolean result = true;
-        // TODO:
-        System.out.println("test sessions");
+        // TODO: Sessions testing
+        System.out.println("test sessions not implemented");
         return result;
     }
 
     static Boolean testMenus(Integer testChoice) {
         Boolean result = false;
-        // TODO:
-        System.out.println("test menus");
+        // TODO: Menu testing
+        System.out.println("test menus not implemented");
         return result;
     }
 
     static Boolean testRoles(Integer testChoice) {
         Boolean result = false;
-        System.out.println("test roles");
-        // TODO:
+        System.out.println("test roles not implemented");
+        // TODO: Role tests
         return result;
     }
 
-    // TODO: Cleanup the test
+    // Cleanup the test
+    // NOTE: do we need this? probably not.
     static void cleanup() {
         System.err.println("Cleaning up");
-        session = null;
+        testSession = null;
         accountTestDB = null;
-        sessionManager = null;
+        sessionTestManager = null;
     }
 
     static void init() throws IOException {
         System.out.println("Errors are expected! Please ignore them.");
         accountTestDB = new AccountDatabase(mainObject, "test_only_data.csv", true);
-        SessionManager sessionManager = new SessionManager(accountTestDB);
+        sessionTestManager = new SessionManager(accountTestDB);
         testAccount = new Account(1, "goodadmin", "test", Role.ADMIN, AccountStatus.ACTIVE);
-        session = new Session("15", Role.ADMIN, testAccount, sessionManager, SessionManager.timeInteger);
+        testSession = new Session("15", Role.ADMIN, testAccount, sessionTestManager, SessionManager.timeInteger);
     }
 
     enum TestList {
@@ -262,9 +304,8 @@ public class ManualTest {
     enum AccountTestList {
         CreateStudent,
         AccountDatabaseConstructor,
-        viewAccountTest,
-        Update,
-        Delete,
+        ViewAccountTest,
+        passwordCheck,
         Exit
     }
 }
