@@ -29,6 +29,14 @@ public class StudentAccount {
     private Integer userID; //Stores the User ID of the student's account
     private Boolean hasModified = false;
 
+    public StudentAccount(Boolean notStudent) {
+        this.dob = null;
+        this.gender = null;
+        this.academicHistory = null;
+        this.phoneNumber = null;
+        this.userID = null;
+    }
+
     public StudentAccount(String dob, Gender gender, String academicHistory, String phoneNumber, Integer userID) {
         this.dob = dob;
         this.gender = gender;
@@ -91,11 +99,11 @@ public class StudentAccount {
     }
 
 
-    void validateSession(Session session) throws ExpiredSessionException, AccessViolationException {
+    boolean validateSession(Session session) throws ExpiredSessionException, AccessViolationException {
         if (!session.validateSession()) {
             throw new ExpiredSessionException("Session is expired or inactive.");
         }
-        Integer sessionuserID = 0;
+        Integer sessionuserID;
         try {
             Account account = session.getAccount();
             sessionuserID = account.getUserID();
@@ -103,7 +111,6 @@ public class StudentAccount {
             throw new NullPointerException("No userID");
         }
         
-
         if (!sessionuserID.equals(this.userID) && 
             !session.getUserRole().equals(Role.ADMIN)) {
             if (this.hasModified == true) {
@@ -111,12 +118,14 @@ public class StudentAccount {
                 // if not modified, then we're probably just saving the session
             }
         }
+        return true;
     }
 
-    void validateSessionForChange(Session session, boolean isChangeAllowed) throws ExpiredSessionException, AccessViolationException {
+    boolean validateSessionForChange(Session session, boolean isChangeAllowed) throws ExpiredSessionException, AccessViolationException {
         validateSession(session); 
         if (!isChangeAllowed) {
             throw new AccessViolationException("You are not authorized to modify this field.");
         }
+        return true;
     }
 }

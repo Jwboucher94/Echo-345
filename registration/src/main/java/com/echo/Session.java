@@ -55,7 +55,7 @@ public class Session {
                 } catch (AccessViolationException e) {
                     System.err.println("Access Violation: " + e.getMessage());
                 } catch (ExpiredSessionException e) {
-                    System.err.println("Session expired: " + e.getMessage());
+                    System.err.println("Session already expired: " + e.getMessage());
                 }
             }
             isActive = false;

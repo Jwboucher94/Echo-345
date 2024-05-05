@@ -2,6 +2,7 @@ package com.echo;
 
 import java.io.IOException;
 
+
 public class ManualTest {
     static Main mainObject = new Main();
     static Session testSession;
@@ -107,6 +108,7 @@ public class ManualTest {
                 }
                 StudentData studentData = new StudentData("01/02/1001", Gender.MALE, "", "123-123-1123");
                 try {
+                    System.out.println("Testing proper account creation");
                     StudentAccount studentAccount = accountTestDB.createAccount(testSession, "tester", "tester", studentData);
                     System.out.println("Account created successfully. User ID: " + studentAccount.getUserID(testSession));
                     testSession.setHasModified();
@@ -121,6 +123,7 @@ public class ManualTest {
                     return false;
                 }
                 try {
+                    System.out.println("Testing duplicate account creation (Denial)");
                     accountTestDB.createAccount(testSession, "tester", "tester", studentData);
                     System.err.println("Error: Duplicate Record created." + "\n");
                     return false;
@@ -129,12 +132,12 @@ public class ManualTest {
                 }
                 try {
                     // Non-admin creation test
-                    Account account = new Account(1, "tester", "tester", Role.STUDENT, AccountStatus.ACTIVE);
-                    Session badsession = new Session("id", Role.STUDENT, account, sessionTestManager, 99999);
+                    System.out.println("Testing non-admin account creation");
+                    Session badsession = sessionTestManager.login("goodstudent", "test", Role.STUDENT);
                     accountTestDB.createAccount(badsession, "shouldnt", "work", studentData);
                     System.err.println("Error: Account created without admin permissions.");
                     return false;
-                } catch (AccessViolationException | ExpiredSessionException | DuplicateRecordException e) {
+                } catch (InvalidCredentialsException | AccessViolationException | ExpiredSessionException | DuplicateRecordException e) {
                     // Expected
                 }
                 System.out.println();
@@ -217,7 +220,7 @@ public class ManualTest {
                 System.out.println();
                 return true;
 
-            case passwordCheck:
+            case PasswordCheck:
             // Tests on the passwordCheck method
                 System.out.println("Checking if the Instructions print without issue.\n-----");
                 accountTestDB.passwordCheckInstruction();
@@ -247,7 +250,56 @@ public class ManualTest {
                 System.out.println();
                 return true;
             // NOTE: Do we need more cases for Account testing?
-            
+            case LoginNameChange:
+            // Tests on the loginNameChange method
+                try {
+                    // Student account attempting change
+                    System.out.println("Change login name verification for regular admin");
+                    Session loginNameTestSession = sessionTestManager.login("goodadmin", "test", Role.ADMIN);
+                    AccountDatabase.changeLoginName(loginNameTestSession, "newloginname");
+                } catch (AccessViolationException | ExpiredSessionException | InvalidCredentialsException | IOException e) {
+                    System.out.println("Error: " + e.getMessage() + "\n");
+                    return false;
+                }
+                try {
+                    System.out.println("Change login name verification for bad admin (Denial)");
+                    Session loginNameTestSession = sessionTestManager.login("badadmin", "test", Role.ADMIN);
+                    AccountDatabase.changeLoginName(loginNameTestSession, "newloginname");
+                    System.err.println("Error: Exception was not caught.\n");
+                    return false;
+                }catch (AccessViolationException | ExpiredSessionException | InvalidCredentialsException | IOException e) {
+                    // expected blocked account
+                }
+                try {
+                    System.out.println("Change login name verification for student (Denial)");
+                    Session loginNameTestSession = sessionTestManager.login("goodstudent", "test", Role.STUDENT);
+                    AccountDatabase.changeLoginName(loginNameTestSession, "newloginname");
+                    System.err.println("Error: Exception was not caught.\n");
+                    return false;
+                }catch (AccessViolationException | ExpiredSessionException | InvalidCredentialsException | IOException e) {
+                    // expected blocked account
+                }
+                try {
+                    System.out.println("Testing login name change with expired session (Ignore log out message)");
+                    Session loginNameTestSession = sessionTestManager.login("goodadmin", "test", Role.ADMIN, 1);
+                    try {
+                        Thread.sleep(10); // Sleep for 10 milliseconds
+                    } catch (InterruptedException e) {
+                        // Handle the exception if the thread is interrupted
+                        Thread.currentThread().interrupt(); // Restore the interrupted status
+                    }
+                    AccountDatabase.changeLoginName(loginNameTestSession, "newloginname");
+                    System.out.println(loginNameTestSession.getAccount().getLoginName());
+                    System.err.println("Error: Exception was not caught.\n");
+                    return false;
+                } catch (AccessViolationException | ExpiredSessionException | IOException e) {
+                    //expected
+                } catch (InvalidCredentialsException e) {
+                    System.out.println("Unexpected Error: "+e.getMessage());
+                    return false;
+                }
+                System.out.println();
+                return true;
             case Exit:
                 break;
         }
@@ -305,7 +357,8 @@ public class ManualTest {
         CreateStudent,
         AccountDatabaseConstructor,
         ViewAccountTest,
-        passwordCheck,
+        PasswordCheck,
+        LoginNameChange,
         Exit
     }
 }

@@ -13,6 +13,11 @@ public class SessionManager {
     }
 
     public Session login(String loginName, String password, Role role) throws InvalidCredentialsException {
+        return login(loginName, password, role, timeInteger);
+    }
+
+
+    public Session login(String loginName, String password, Role role, Integer SetTimeInteger) throws InvalidCredentialsException {
 
         for (Account account : accountDatabase.accountDB.values()) {
             
@@ -20,7 +25,7 @@ public class SessionManager {
             
                 if (account.role == role && !AccountStatus.BLOCKED.equals(account.status)) {
                     String sessionId = generateSessionId();
-                    Session newSession = new Session(sessionId, role, account, this, timeInteger); // 30 minutes
+                    Session newSession = new Session(sessionId, role, account, this, SetTimeInteger); // 30 minutes
                     activeSessions.put(sessionId, newSession);
                     return newSession;
                 } else if (AccountStatus.BLOCKED.equals(account.status)) {

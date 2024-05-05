@@ -39,6 +39,10 @@ public class AccountDatabase {
         }
     }
 
+    Account getAccount(Integer userID) {
+        return accountDB.get(userID);
+    }
+
     StudentAccount createAccount(Session session, String loginName, String password) throws AccessViolationException, ExpiredSessionException, DuplicateRecordException {
         return createAccount(session, loginName, password, null);
     }
@@ -270,7 +274,7 @@ public class AccountDatabase {
                 password = main.getInput();
                 test = passwordCheck(session, password);
             } catch (IOException e) {
-                System.err.println("Password does not meet the requirements.");
+                System.err.println(e.getMessage());
             }
         }
         if (test) {
@@ -284,22 +288,24 @@ public class AccountDatabase {
     }
 
     // check if you can change the login name
-    static boolean changeLoginName(Session session, String loginName) {
+    static boolean changeLoginName(Session session, String newLoginName) throws AccessViolationException, ExpiredSessionException, IOException {
         try {
-            if (session.getAccount().studentAccount == null) {
-                session.getAccount().studentAccount.validateSessionForChange(session, true);
+            if (session.getAccount().studentAccount == null && !(session.getAccount().role == Role.STUDENT)) {
+                StudentAccount studentAccount = new StudentAccount(true);
+                studentAccount.validateSessionForChange(session, true);
+            } else {
+                throw new AccessViolationException("Cannot change login name as a student.");
             }
         }  catch (AccessViolationException e) {
-            System.err.println("Access violation: " + e.getMessage());
+            throw new AccessViolationException("Access violation: " + e.getMessage());
         } catch (ExpiredSessionException e) {
-            System.err.println("Session expired: " + e.getMessage());
+            throw new ExpiredSessionException("Session expired: " + e.getMessage());
         }
         Map<Integer, Account> accountDB = session.getSessionManager().getAccountDatabase().getAccountDB();
         // test if login name is taken
         for (Account account : accountDB.values()) {
-            if (account.loginName.equals(loginName)) {
-                System.err.println("Login name already exists: " + loginName);
-                return false;
+            if (account.loginName.equals(newLoginName)) {
+                throw new IOException("Login name already exists: " + newLoginName);
             }
         }
         return true;
