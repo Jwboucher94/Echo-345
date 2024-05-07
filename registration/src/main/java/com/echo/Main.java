@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.Scanner;
 
 public class Main {
+    final String csvFile = "MOCK_DATA.csv"; // Set the csv filename. must be in resources folder.
     Scanner scanner;
 
     public Main() {
@@ -114,7 +115,6 @@ public class Main {
     }
 
     AccountDatabase loadDatabase() throws FileNotFoundException, IOException {
-        String csvFile = "MOCK_DATA.csv"; // "MOCK_DATA.csv" is the file name
         try {
             AccountDatabase accountDB = new AccountDatabase(this, csvFile);
             return accountDB;

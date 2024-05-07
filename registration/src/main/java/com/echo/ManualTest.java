@@ -40,7 +40,6 @@ public class ManualTest {
                     if (input.toLowerCase().startsWith("q")) {
                         System.exit(0);
                     }
-                    System.err.println("Invalid choice. Please try again.");
                 }
             }
         } catch (Exception e) {
@@ -56,36 +55,40 @@ public class ManualTest {
         Boolean result = null;
         Integer testChoice = null;
         while (testChoice == null) {
-            switch (TestList.values()[choice]) {
-                case Accounts:
-                    System.out.println("Choose an Account function to test:");
-                    for (AccountTestList test : AccountTestList.values()) {
-                        System.out.println((test.ordinal()+1) + ": " + test.name());
-                    }
-                    testChoice = (Integer.parseInt(System.console().readLine())-1);
-                    result = testAccounts(testChoice);
-                    testChoice = 1;
-                    break;
-                case Sessions:
-                    result = testSessions(testChoice);
-                    testChoice = 1;
-                    break;
-                case Menus:
-                    result = testMenus(testChoice);
-                    testChoice = 1;
-                    break;
-                case Roles:
-                    result = testRoles(testChoice);
-                    testChoice = 1;
-                    break;
-                case Back:
-                    return -1;
-                case Exit:
-                    System.exit(0);
-                default:
-                    System.err.println("Invalid choice. Please try again.");
-                    break;
+            testChoice = 1;
+            try {
+                switch (TestList.values()[choice]) {
+                    case Accounts:
+                        System.out.println("Choose an Account function to test:");
+                        for (AccountTestList test : AccountTestList.values()) {
+                            System.out.println((test.ordinal()+1) + ": " + test.name());
+                        }
+                        testChoice = (Integer.parseInt(System.console().readLine())-1);
+                        result = testAccounts(testChoice);
+                        break;
+                    case Sessions:
+                        result = testSessions(testChoice);
+                        break;
+                    case Menus:
+                        result = testMenus(testChoice);
+                        break;
+                    case Roles:
+                        result = testRoles(testChoice);
+                        break;
+                    case Back:
+                        return 0;
+                    case Exit:
+                        System.exit(0);
+                    default:
+                        System.err.println("Invalid choice. Please try again.");
+                        testChoice = null;
+                        break;
+                }
+            } catch (ArrayIndexOutOfBoundsException e) {
+                System.err.println("Invalid choice. Please try again.");
+                testChoice = null;
             }
+            
         }
         if (result == true) {
             return 1;
@@ -300,8 +303,11 @@ public class ManualTest {
                 }
                 System.out.println();
                 return true;
-            case Exit:
+            case Back:
                 break;
+            case Exit:
+                System.out.println("Exiting");
+                System.exit(0);
         }
         return result;
     }
@@ -359,6 +365,7 @@ public class ManualTest {
         ViewAccountTest,
         PasswordCheck,
         LoginNameChange,
+        Back,
         Exit
     }
 }

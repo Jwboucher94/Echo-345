@@ -72,7 +72,6 @@ public class StudentAccount {
         return userID;
     }
 
-
     public void setDob(Session session, String dob) throws ExpiredSessionException, AccessViolationException {
         validateSessionForChange(session, true);
         this.dob = dob;
@@ -93,11 +92,9 @@ public class StudentAccount {
         this.phoneNumber = phoneNumber;
     }
 
-  
     public void setUserID(Session session, Integer userID) throws AccessViolationException {
         throw new AccessViolationException("Cannot change user ID.");
     }
-
 
     boolean validateSession(Session session) throws ExpiredSessionException, AccessViolationException {
         if (!session.validateSession()) {
