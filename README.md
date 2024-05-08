@@ -35,7 +35,7 @@ username: admin
 password: password
 
 Student Account
-username: student
+username: gstudent
 password: test
 
 Advisor account:
