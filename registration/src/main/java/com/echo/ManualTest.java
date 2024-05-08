@@ -22,7 +22,7 @@ public class ManualTest {
                 for (TestList test : TestList.values()) {
                     System.out.println((test.ordinal() + 1) + ": " + test.name());
                 }
-                Integer choice = Integer.parseInt(System.console().readLine());
+                Integer choice = mainObject.getMenuInput(length);
                 if (choice == length) {
                     System.exit(0);
                 } else if (choice-1 == 0 || choice <= length) {
@@ -63,7 +63,19 @@ public class ManualTest {
                         for (AccountTestList test : AccountTestList.values()) {
                             System.out.println((test.ordinal()+1) + ": " + test.name());
                         }
-                        testChoice = (Integer.parseInt(System.console().readLine())-1);
+                        try {
+                            // ... your switch logic ... 
+                            testChoice = (Integer.parseInt(System.console().readLine())-1); 
+                            // ...
+                        } catch (NumberFormatException e) {
+                            System.err.println("Invalid input. Please enter a number.");
+                            testChoice = null;
+                            break;
+                        } catch (ArrayIndexOutOfBoundsException e) {
+                            System.err.println("Invalid choice. Please try again.");
+                            testChoice = null;
+                            break;
+                        }
                         result = testAccounts(testChoice);
                         break;
                     case Sessions:

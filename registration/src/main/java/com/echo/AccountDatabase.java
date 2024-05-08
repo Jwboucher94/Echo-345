@@ -1,15 +1,13 @@
 package com.echo;
 
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
-
 
 
 public class AccountDatabase {
@@ -17,7 +15,7 @@ public class AccountDatabase {
     Map<Integer, Account> accountDB = new HashMap<>();
     ResourceLoader loader = new ResourceLoader();
     String csvFileName;    
-    String csvFilePath;
+    String csvContent;
     
 
     // AccountDatabase Constructor
@@ -31,11 +29,12 @@ public class AccountDatabase {
             throw new IllegalArgumentException("csv string cannot be null");
         }
         this.csvFileName = csvFileName;
-        this.csvFilePath = this.loader.getResourcePath(csvFileName);
+        System.out.println(csvFileName);
         try {
             this.accountDB = loadAccounts(csvFileName, test);
         } catch (IOException e) {
             throw new IOException("Error loading accounts from file: " + e.getMessage());
+            
         }
     }
 
@@ -334,62 +333,64 @@ public class AccountDatabase {
     // Load the accounts from a file and return a map of accounts
     public Map<Integer, Account> loadAccounts(String csvFileName, Boolean test) throws IOException {
         try {
-            csvFilePath = loader.getResourcePath(csvFileName);
+            csvContent = loader.getResourceAsString(csvFileName);
         } catch (IOException e) {
             System.err.println("Error saving accounts: " + e.getMessage());
-            csvFilePath = null;
+            csvContent = null;
         }
-        String line;
+        String[] lines;
+        try {
+            lines = csvContent.split(System.lineSeparator());
+        } catch (NullPointerException e) {
+            throw new IOException("Error loading accounts: " + e.getMessage());
+        }
         ArrayList<Account> brokenAccounts = new ArrayList<>();
-        try (BufferedReader br = new BufferedReader(new FileReader(csvFilePath))) {  
-            while ((line = br.readLine()) != null) {
-                String[] fields = line.split(",");
-                if (fields.length >= 5) {
-                    Account account;
-                    try {
-                        account = new Account(Integer.parseInt(fields[0]), fields[1], fields[2], Role.valueOf(fields[3]), AccountStatus.valueOf(fields[4]));
-                    } catch (ArrayIndexOutOfBoundsException | IllegalArgumentException e) {
-                        throw new IOException(e.getMessage());
-                    }
-                    // If the account is a student account, create a student account object for them
-                    if (account.role == Role.STUDENT) {
-                        try {
-                            StudentAccount studentAccount = new StudentAccount(fields[5], Gender.valueOf(fields[6]), fields[7], fields[8], account.userID);
-                            account.setStudentAccount(studentAccount);
-                        } catch (ArrayIndexOutOfBoundsException e) {
-                            System.err.println("Error loading student account: " + e.getMessage() + "\n" + 
-                                                "Is it a student account?\n" + 
-                                                "Offending Account: " + account.userID + " : " + account.loginName);
-                            System.out.println("Would you like to create a student account for this user? (Y/N)");
-                            String input;
-                            if (test == true) {
-                                input = "n";
-                            } else {
-                                input = main.getInput();
-                            }
 
-                            if (input.toLowerCase().equals("y")) {
-                                brokenAccounts.add(account);
-                            } else {
-                                System.err.println("Account will be ignored, for now. Please correct the data in the file as soon as possible.");
-                            }
-                        }
-                    } 
-                    if (!accountDB.containsKey(account.userID)) {
-                        accountDB.put(account.userID, account);
-                    }
-                } else {
-                    throw new IOException("Invalid account data format. Please ensure the file is in the correct format.");
+        for (String line : lines) {
+            String[] fields = line.split(",");
+            if (fields.length >= 5) {
+                Account account;
+                try {
+                    account = new Account(Integer.parseInt(fields[0]), fields[1], fields[2], Role.valueOf(fields[3]), AccountStatus.valueOf(fields[4]));
+                } catch (ArrayIndexOutOfBoundsException | IllegalArgumentException e) {
+                    throw new IOException(e.getMessage());
                 }
+                // If the account is a student account, create a student account object for them
+                if (account.role == Role.STUDENT) {
+                    try {
+                        StudentAccount studentAccount = new StudentAccount(fields[5], Gender.valueOf(fields[6]), fields[7], fields[8], account.userID);
+                        account.setStudentAccount(studentAccount);
+                    } catch (ArrayIndexOutOfBoundsException e) {
+                        System.err.println("Error loading student account: " + e.getMessage() + "\n" + 
+                                            "Is it a student account?\n" + 
+                                            "Offending Account: " + account.userID + " : " + account.loginName);
+                        System.out.println("Would you like to create a student account for this user? (Y/N)");
+                        String input;
+                        if (test == true) {
+                            input = "n";
+                        } else {
+                            input = main.getInput();
+                        }
+
+                        if (input.toLowerCase().equals("y")) {
+                            brokenAccounts.add(account);
+                        } else {
+                            System.err.println("Account will be ignored, for now. Please correct the data in the file as soon as possible.");
+                        }
+                    }
+                } 
+                if (!accountDB.containsKey(account.userID)) {
+                    accountDB.put(account.userID, account);
+                }
+            } else {
+                throw new IOException("Invalid account data format. Please ensure the file is in the correct format.");
             }
-            br.close();
-            if (brokenAccounts.size() > 0) {
-                System.out.println("Let's fill in the missing student data.");
-                accountDB = missingStudentAccount(brokenAccounts, accountDB);
-            }
-        } catch (IOException e) {
-            throw new IOException(e.getMessage());
-        } 
+        }
+        
+        if (brokenAccounts.size() > 0) {
+            System.out.println("Let's fill in the missing student data.");
+            accountDB = missingStudentAccount(brokenAccounts, accountDB);
+        }
         return accountDB;
     }
 
@@ -432,37 +433,39 @@ public class AccountDatabase {
     // Save the accounts to a file
     public void saveAccounts(Session session) throws AccessViolationException, ExpiredSessionException {
         try {
-            csvFilePath = loader.getResourcePath(csvFileName);
-        } catch (IOException e) {
-            System.err.println("Error saving accounts: " + e.getMessage());
-            csvFilePath = null;
-        }
-        try (FileWriter fw = new FileWriter(csvFilePath);
-            BufferedWriter bw = new BufferedWriter(fw)) {
-                for (Account account : accountDB.values()) {
-                    String line;
-                    try { 
-                        StudentAccount studentAccount = account.getStudentAccount(session);
-                        line = String.format("%d,%s,%s,%s,%s,%s,%s,%s,%s\n",
-                            account.userID, account.loginName, account.password, account.role, account.status, studentAccount.getDob(session), 
-                            studentAccount.getGender(session), studentAccount.getAcademicHistory(session), studentAccount.getPhoneNumber(session));
-                    } catch (NotStudentException e) { 
-                        // Not a student account
-                        line = String.format("%d,%s,%s,%s,%s\n",
-                            account.userID, account.loginName, account.password, account.role, account.status);
-                    } catch (NullPointerException e) {
-                        // Broken student account, probably needs studentAccount
-                        System.err.println("Error saving student account: " + e.getMessage() + "\n" + 
-                                           "Offending Account: " + account.userID + " : " + account.loginName);
-                        line = String.format("%d,%s,%s,%s,%s\n",
-                            account.userID, account.loginName, account.password, account.role, account.status);
-                    }
-                    bw.write(line);
+            csvContent = loader.getResourceAsString(csvFileName);
+            StringBuilder csvBuilder = new StringBuilder();
+            StringWriter stringWriter = new StringWriter();
+            BufferedWriter writer = new BufferedWriter(stringWriter);
+            for (Account account : accountDB.values()) {
+                try { 
+                    StudentAccount studentAccount = account.getStudentAccount(session);
+                    writer.write(String.format("%d,%s,%s,%s,%s,%s,%s,%s,%s\n",
+                        account.userID, account.loginName, account.password, account.role, account.status, studentAccount.getDob(session), 
+                        studentAccount.getGender(session), studentAccount.getAcademicHistory(session), studentAccount.getPhoneNumber(session)));
+                } catch (NotStudentException e) { 
+                    // Not a student account
+                    writer.write(String.format("%d,%s,%s,%s,%s\n",
+                        account.userID, account.loginName, account.password, account.role, account.status));
+                } catch (NullPointerException e) {
+                    // Broken student account, probably needs studentAccount
+                    System.err.println("Error saving student account: " + e.getMessage() + "\n" + 
+                                    "Offending Account: " + account.userID + " : " + account.loginName);
+                    writer.write(String.format("%d,%s,%s,%s,%s\n",
+                        account.userID, account.loginName, account.password, account.role, account.status));
                 }
-            session.setHasModified(false);
+            }
+            writer.close();
+            String csvContent = csvBuilder.toString();
+            FileWriter fw = new FileWriter(csvFileName);
+            BufferedWriter bw = new BufferedWriter(fw);
+            bw.write(csvContent);
+            bw.close(); 
+            session.setHasModified(false); 
         } catch (IOException e) {
             System.err.println("Error saving accounts: " + e.getMessage());
-        } 
+            csvContent = null;
+        }
     }
 
     // Returns an account using userID
